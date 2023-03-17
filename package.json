@@ -15,7 +15,9 @@
   "repository": "musicq/unwrapit",
   "scripts": {
     "build": "tsup src/index.ts --dts --format cjs,esm",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
   },
   "keywords": [
     "result"
@@ -28,5 +30,8 @@
   "devDependencies": {
     "tsup": "^6.6.3",
     "typescript": "^5.0.2"
+  },
+  "dependencies": {
+    "vitest": "^0.29.3"
   }
 }

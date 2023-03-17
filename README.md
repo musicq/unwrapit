@@ -36,7 +36,7 @@ const promise = new Promise<string>((resolve, reject) => {
 })
 
 // ret type is string
-const ret = wrap(promise).unwrap()
+const ret = (await wrap(promise)).unwrap()
 ```
 
 ### Check before use
@@ -52,14 +52,14 @@ const promise = new Promise<string>((resolve, reject) => {
   return reject(new Error('Random number is greater than 0.5.'))
 })
 
-const ret = wrap(promise)
+const ret = await wrap(promise)
 
 if (!ret.ok) {
   console.error(ret.error)
   throw ret.error
 }
 
-console.log(ret.value)
+ret.value
 ```
 
 ### Use Result manually
@@ -80,5 +80,5 @@ function fn(v: boolean): Result<number, string> {
 }
 
 const ret = fn(Math.random() < 0.5)
-console.log(ret.unwrap())
+ret.unwrap()
 ```
