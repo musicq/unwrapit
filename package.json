@@ -17,7 +17,8 @@
     "build": "tsup src/index.ts --dts --format cjs,esm",
     "prepublish": "npm run build",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "typecheck": "vitest typecheck"
   },
   "keywords": [
     "result"
