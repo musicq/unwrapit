@@ -12,6 +12,7 @@
       "import": "./dist/index.js"
     }
   },
+  "repository": "musicq/unwrapit",
   "scripts": {
     "build": "tsup src/index.ts --dts --format cjs,esm",
     "prepublish": "npm run build"
