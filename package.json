@@ -1,0 +1,19 @@
+{
+  "name": "unwrapit",
+  "version": "1.0.0",
+  "description": "Rust Result simulation in JavaScript.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsup src/index.ts --dts --format cjs,esm"
+  },
+  "keywords": [
+    "result"
+  ],
+  "author": "musicq <kui.liang.sg@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "tsup": "^6.6.3",
+    "typescript": "^5.0.2"
+  }
+}
