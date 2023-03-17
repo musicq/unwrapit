@@ -10,6 +10,23 @@ type Err<E = unknown> = {
   unwrap: () => never
 }
 
+/**
+ * Union type of Ok and Err. When you create a result value with either
+ * `ok` or `err`, it's a Result type.
+ *
+ * # Example
+ * ```ts
+ * import {ok, err} from 'unwrapit'
+ * import type {Result} from 'unwrapit'
+ *
+ * const pass: Result<number, never> = ok(1)
+ * const fail: Result<never, string> = err('error')
+ *
+ * // A Result type can `unwrap`.
+ * pass.unwrap()
+ * fail.unwrap()
+ * ```
+ */
 export type Result<T, E = unknown> = Ok<T> | Err<E>
 
 /**
@@ -48,14 +65,6 @@ export function wrap<TArgs extends any[], TReturn>(
  */
 export function wrap<T extends Promise<any>>(promise: T): Result<Awaited<T>>
 
-/**
- * Wrap either a function or a promise value
- *
- * # Example
- * ```ts
- * import {wrap} from 'unwrapit
- * ```
- */
 export function wrap(input: any) {
   if (typeof input === 'function') {
     return (...args: any[]) => {
@@ -70,6 +79,18 @@ export function wrap(input: any) {
   return input.then(ok).catch(err)
 }
 
+/**
+ * Use when return some value this stands for success.
+ *
+ * # Example
+ *
+ * ```ts
+ * import {ok} from 'unwrapit
+ * import type {Result} from 'unwrapit
+ *
+ * const pass: Result<number, never> = ok(1)
+ * ```
+ */
 export function ok<T>(v: T): Result<T, never> {
   return {
     ok: true,
@@ -80,6 +101,18 @@ export function ok<T>(v: T): Result<T, never> {
   }
 }
 
+/**
+ * Use when return some value this stands for error.
+ *
+ * # Example
+ *
+ * ```ts
+ * import {err} from 'unwrapit
+ * import type {Result} from 'unwrapit
+ *
+ * const fail: Result<never, string> = err('string')
+ * ```
+ */
 export function err<T = unknown>(e: T): Result<never, T> {
   return {
     ok: false,
