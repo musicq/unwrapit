@@ -14,7 +14,7 @@
   },
   "repository": "musicq/unwrapit",
   "scripts": {
-    "build": "tsup src/index.ts --dts --format cjs,esm",
+    "build": "tsup src/index.ts --dts --minify --format cjs,esm",
     "prepublish": "npm run build",
     "test": "vitest",
     "coverage": "vitest run --coverage",
