@@ -27,7 +27,7 @@
     "dist"
   ],
   "author": "musicq <kui.liang.sg@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@vitest/coverage-c8": "^0.29.3",
     "tsup": "^6.6.3",
