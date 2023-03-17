@@ -3,12 +3,24 @@
   "version": "1.0.0",
   "description": "Rust Result simulation in JavaScript.",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "tsup src/index.ts --dts --format cjs,esm"
+    "build": "tsup src/index.ts --dts --format cjs,esm",
+    "prepublish": "npm run build"
   },
   "keywords": [
     "result"
+  ],
+  "files": [
+    "dist"
   ],
   "author": "musicq <kui.liang.sg@gmail.com>",
   "license": "ISC",
