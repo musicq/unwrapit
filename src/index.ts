@@ -50,10 +50,3 @@ export function ok<T>(v: T): Ok<T> {
     },
   }
 }
-
-// panic if there is error in unwrap
-// const async_ret = wrap(new Promise<number>((r, j) => r(1))).unwrap()
-// const sync_ret = wrap((): string => JSON.parse('123'))().unwrap()
-
-// let a = ok(1)
-// let e = err<number>(1)
