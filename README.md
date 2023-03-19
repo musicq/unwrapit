@@ -45,7 +45,7 @@ const ret = (await wrap(promise)).unwrap()
 
 ### Check before use
 
-Normally, you should check if your value if succeed or not, then handle your
+Normally, you should check your value if succeed or not, then handle your
 errors. In this case, you can do this
 
 ```ts
