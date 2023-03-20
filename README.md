@@ -4,7 +4,7 @@
   <a href="https://npmjs.com/package/unwrapit"><img src="https://img.shields.io/npm/v/unwrapit.svg" alt="npm package"></a>
 </p>
 
-`unwrapit` is a simulation of Rust Result.
+`unwrapit` is a graceful way to handle errors in JavaScript.
 
 ## Getting start
 

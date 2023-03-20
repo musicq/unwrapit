@@ -1,7 +1,7 @@
 {
   "name": "unwrapit",
   "version": "1.2.0",
-  "description": "Rust Result simulation in JavaScript.",
+  "description": "A graceful way to handle errors in JavaScript",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,7 +21,9 @@
     "typecheck": "vitest typecheck"
   },
   "keywords": [
-    "result"
+    "result",
+    "typescript",
+    "error handler"
   ],
   "files": [
     "dist"
