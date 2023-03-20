@@ -7,6 +7,7 @@
     "noImplicitOverride": true,
     "noUnusedLocals": true,
     "useUnknownInCatchVariables": false,
+    "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
     "lib": ["ESNext", "DOM"]
   }

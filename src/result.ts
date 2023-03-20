@@ -1,14 +1,4 @@
-export type Ok<T> = {
-  ok: true
-  value: T
-  unwrap: () => T
-}
-
-export type Err<E = unknown> = {
-  ok: false
-  error: E
-  unwrap: () => never
-}
+import {panic} from './panic'
 
 /**
  * Union type of Ok and Err. When you create a result value with either
@@ -27,7 +17,7 @@ export type Err<E = unknown> = {
  * fail.unwrap()
  * ```
  */
-export type Result<T, E = unknown> = Ok<T> | Err<E>
+export type Result<T, E = unknown> = Ok<T> | Err<E, T>
 
 /**
  * Wrap an synchronous function. This is useful when you are trying to parse an
@@ -94,13 +84,7 @@ export function wrap(input: any) {
  * ```
  */
 export function ok<T>(v: T): Result<T, never> {
-  return {
-    ok: true,
-    value: v,
-    unwrap() {
-      return v
-    },
-  }
+  return new Ok(v)
 }
 
 /**
@@ -115,12 +99,57 @@ export function ok<T>(v: T): Result<T, never> {
  * const fail: Result<never, string> = err('string')
  * ```
  */
-export function err<T = unknown>(e: T): Result<never, T> {
-  return {
-    ok: false,
-    error: e,
-    unwrap() {
-      throw e
-    },
+export function err<E = unknown, T = any>(e: E): Result<T, E> {
+  return new Err<E, T>(e)
+}
+
+export interface R<T, E = unknown> {
+  /**
+   * unwrap value, panic if the value is Err.
+   */
+  unwrap: () => [E] extends [never] ? T : never
+  /**
+   * if the unwrapped value is Err, will map to the given value instead.
+   */
+  unwrapOr: (v: T) => T
+  /**
+   * if the unwrapped value is Err, will panic with a customized error message.
+   */
+  expect: (errorMessage: string) => [E] extends [never] ? T : never
+}
+
+export class Ok<T> implements R<T, never> {
+  readonly ok: true = true
+
+  constructor(public readonly value: T) {}
+
+  unwrap() {
+    return this.value
+  }
+
+  unwrapOr(v: T) {
+    return this.value
+  }
+
+  expect(errorMessage: string): T {
+    return this.value
+  }
+}
+
+export class Err<E, T = any> implements R<T, E> {
+  readonly ok: false = false
+
+  constructor(public readonly error: E) {}
+
+  unwrap() {
+    return panic(this.error)
+  }
+
+  unwrapOr(v: T) {
+    return v
+  }
+
+  expect(errorMessage: string) {
+    return panic(errorMessage, { cause: this.error })
   }
 }
