@@ -86,3 +86,34 @@ function fn(v: boolean): Result<number, string> {
 const ret = fn(Math.random() < 0.5)
 ret.unwrap()
 ```
+
+## API
+
+### `unwrap`
+
+Try to get the value, panic when error occurs.
+
+```ts
+const wrapper = await wrap(Promise.resolve(1))
+const json = wrapper.unwrap() // 1
+```
+
+### `unwrapOr`
+
+Use an alternative value when error occurs.
+
+```ts
+const wrapper = await wrap(Promise.reject('error'))
+const json = wrapper.unwrapOr(1) // 1
+```
+
+### `expect`
+
+Provide a customized error message when error occurs.
+
+```ts
+const wrapper = await wrap(Promise.reject('error'))
+const json = wrapper.expect('error message') // panic!
+// error message
+// [Cause] error
+```
