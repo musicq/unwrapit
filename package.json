@@ -35,5 +35,8 @@
     "tsup": "^6.6.3",
     "typescript": "^5.0.2",
     "vitest": "^0.29.3"
+  },
+  "dependencies": {
+    "panicit": "^1.0.0"
   }
 }

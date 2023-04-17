@@ -1,4 +1,4 @@
-import {panic} from './panic'
+import {panic} from 'panicit'
 
 /**
  * Union type of Ok and Err. When you create a result value with either

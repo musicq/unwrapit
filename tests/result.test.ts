@@ -1,11 +1,11 @@
-import { afterEach, describe, expect, test, vi } from 'vitest'
-import { panic } from '../src/panic'
-import { err, ok, wrap } from '../src/result'
+import {panic} from 'panicit'
+import {afterEach, describe, expect, test, vi} from 'vitest'
+import {err, ok, wrap} from '../src/result'
 
-vi.mock('../src/panic', async () => {
-  const mod = await vi.importActual('../src/panic')
+vi.mock('panicit', async () => {
+  const mod = await vi.importActual('panicit')
   return {
-    ...(mod as typeof import('../src/panic')),
+    ...(mod as typeof import('panicit')),
     panic: vi.fn(),
   }
 })
