@@ -2,8 +2,8 @@ lockfileVersion: '6.0'
 
 dependencies:
   panicit:
-    specifier: ^1.0.0
-    version: 1.0.0
+    specifier: ^1.1.0
+    version: 1.1.0
 
 devDependencies:
   '@vitest/coverage-c8':
@@ -981,8 +981,8 @@ packages:
       p-limit: 3.1.0
     dev: true
 
-  /panicit@1.0.0:
-    resolution: {integrity: sha512-AG1Vd9sdpei7zy7ovSI12Qgeg36qIZdgXMZTXx3wFzQwPdg7hs44COrmNepZbBH6oc0FeqmfJsKHPTb7BC7O4w==}
+  /panicit@1.1.0:
+    resolution: {integrity: sha512-Gh/GAH/FsyK/i5AiXOmJSFKZjTH2LJhV+2xgEASAKcBABqE83iIYxSjjvPExIrDPwKkLzRgvdqz/1LCPE3iyeQ==}
     dev: false
 
   /path-exists@4.0.0:

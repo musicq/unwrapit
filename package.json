@@ -37,6 +37,6 @@
     "vitest": "^0.29.3"
   },
   "dependencies": {
-    "panicit": "^1.0.0"
+    "panicit": "^1.1.0"
   }
 }
