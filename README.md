@@ -98,6 +98,15 @@ const wrapper = await wrap(Promise.resolve(1))
 const json = wrapper.unwrap() // 1
 ```
 
+If the unwrapped value is an error, it will throw error, in Node.js, it will
+exit the program. If you don't want to terminate the program, you can pass
+`{panic: false}` explicitly.
+
+```ts
+// this won't exit the program in Node.js
+wrap(() => throw new Error('some error')).unwrap({panic: false})
+```
+
 ### `unwrapOr`
 
 Use an alternative value when error occurs.
