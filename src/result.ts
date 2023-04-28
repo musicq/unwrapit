@@ -107,7 +107,7 @@ export interface R<T, E = unknown> {
   /**
    * unwrap value, panic if the value is Err.
    */
-  unwrap: () => [E] extends [never] ? T : never
+  unwrap: (opt?: { panic: boolean }) => [E] extends [never] ? T : never
   /**
    * if the unwrapped value is Err, will map to the given value instead.
    */
@@ -115,7 +115,10 @@ export interface R<T, E = unknown> {
   /**
    * if the unwrapped value is Err, will panic with a customized error message.
    */
-  expect: (errorMessage: string) => [E] extends [never] ? T : never
+  expect: (
+    errorMessage: string,
+    opt?: { panic: boolean }
+  ) => [E] extends [never] ? T : never
 }
 
 export class Ok<T> implements R<T, never> {
@@ -123,7 +126,7 @@ export class Ok<T> implements R<T, never> {
 
   constructor(public readonly value: T) {}
 
-  unwrap() {
+  unwrap(opt?: { panic: boolean }) {
     return this.value
   }
 
@@ -131,7 +134,8 @@ export class Ok<T> implements R<T, never> {
     return this.value
   }
 
-  expect(errorMessage: string): T {
+  // to provide same type hint
+  expect(errorMessage: string, opt?: { panic: boolean }): T {
     return this.value
   }
 }
@@ -141,15 +145,18 @@ export class Err<E, T = any> implements R<T, E> {
 
   constructor(public readonly error: E) {}
 
-  unwrap() {
-    return panic(this.error)
+  unwrap(opt?: { panic: boolean }) {
+    return panic(this.error, { shouldExit: opt?.panic ?? true })
   }
 
   unwrapOr(v: T) {
     return v
   }
 
-  expect(errorMessage: string) {
-    return panic(errorMessage, { cause: this.error })
+  expect(errorMessage: string, opt?: { panic: boolean }) {
+    return panic(errorMessage, {
+      cause: this.error,
+      shouldExit: opt?.panic ?? true,
+    })
   }
 }
