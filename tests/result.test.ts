@@ -52,7 +52,19 @@ describe('result', () => {
       const error = err('error')
       expect(error.unwrap()).toBeUndefined()
       expect(panic).toHaveBeenCalledOnce()
-      expect(panic).toBeCalledWith('error')
+      expect(panic).toBeCalledWith(
+        'error',
+        expect.objectContaining({ shouldExit: true })
+      )
+    })
+
+    test('unwrap w/o panic', () => {
+      const error = err('error')
+      expect(error.unwrap({ panic: false })).toBeUndefined()
+      expect(panic).toBeCalledWith(
+        'error',
+        expect.objectContaining({ shouldExit: false })
+      )
     })
 
     test('unwrapOr', () => {
@@ -75,6 +87,19 @@ describe('result', () => {
         'error message',
         expect.objectContaining({
           cause: 'error',
+          shouldExit: true,
+        })
+      )
+    })
+
+    test('expect w/o panic', () => {
+      const error = err('error')
+      expect(error.expect('error message', { panic: false })).toBeUndefined()
+      expect(panic).toBeCalledWith(
+        'error message',
+        expect.objectContaining({
+          cause: 'error',
+          shouldExit: false,
         })
       )
     })
