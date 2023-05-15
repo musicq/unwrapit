@@ -1,6 +1,7 @@
 import {panic} from 'panicit'
 import {afterEach, describe, expect, test, vi} from 'vitest'
-import {err, ok, wrap} from '../src/result'
+import {setPanic} from '../src'
+import {Panic, err, ok, wrap} from '../src/result'
 
 vi.mock('panicit', async () => {
   const mod = await vi.importActual('panicit')
@@ -54,16 +55,16 @@ describe('result', () => {
       expect(panic).toHaveBeenCalledOnce()
       expect(panic).toBeCalledWith(
         'error',
-        expect.objectContaining({ shouldExit: true })
+        expect.objectContaining({ shouldExit: false })
       )
     })
 
     test('unwrap w/o panic', () => {
       const error = err('error')
-      expect(error.unwrap({ panic: false })).toBeUndefined()
+      expect(error.unwrap({ panic: true })).toBeUndefined()
       expect(panic).toBeCalledWith(
         'error',
-        expect.objectContaining({ shouldExit: false })
+        expect.objectContaining({ shouldExit: true })
       )
     })
 
@@ -87,19 +88,19 @@ describe('result', () => {
         'error message',
         expect.objectContaining({
           cause: 'error',
-          shouldExit: true,
+          shouldExit: false,
         })
       )
     })
 
     test('expect w/o panic', () => {
       const error = err('error')
-      expect(error.expect('error message', { panic: false })).toBeUndefined()
+      expect(error.expect('error message', { panic: true })).toBeUndefined()
       expect(panic).toBeCalledWith(
         'error message',
         expect.objectContaining({
           cause: 'error',
-          shouldExit: false,
+          shouldExit: true,
         })
       )
     })
@@ -156,6 +157,26 @@ describe('result', () => {
       }
       expect(handler.ok).toBe(false)
       expect(handler.error).toMatch(/Toggle is off\./)
+    })
+  })
+
+  describe('customized panic function', () => {
+    test('setPanic', () => {
+      class MyError extends Error {}
+      const myPanic: Panic = (msg: string) => {
+        throw new MyError(msg)
+      }
+
+      setPanic(myPanic)
+
+      const fail = err('error')
+
+      try {
+        fail.unwrap()
+      } catch (e) {
+        expect(e).toBeInstanceOf(MyError)
+        expect(e.message).toBe('error')
+      }
     })
   })
 })

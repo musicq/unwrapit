@@ -1,3 +1,3 @@
 export {panic} from 'panicit'
-export {err, ok, wrap} from './result'
-export type {Result} from './result'
+export {err, ok, setPanic, wrap} from './result'
+export type {Panic, Result} from './result'
