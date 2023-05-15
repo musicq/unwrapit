@@ -126,3 +126,36 @@ const json = wrapper.expect('error message') // panic!
 // error message
 // [Cause] error
 ```
+
+### `setPanic`
+
+Use `setPanic` to set your customized panic function. This is useful when you
+want to handle your customized errors by yourself.
+
+Panic function should follow the below type definition
+
+```ts
+type PanicOption = {
+  cause?: any
+  exitCode?: number
+  shouldExit?: boolean
+}
+
+type Panic = (message: any, opt?: PanicOption | undefined) => never
+```
+
+By default, it will use the `panic` from
+[`panicit`](https://github.com/musicq/panicit).
+
+Here's an example
+
+```ts
+import { setPanic } from 'unwrapit'
+import type { Panic } from 'unwrapit'
+
+class MyError extends Error {}
+
+setPanic((msg: string) => {
+  throw new MyError(msg)
+})
+```

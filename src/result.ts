@@ -1,4 +1,28 @@
-import {panic} from 'panicit'
+import { panic as defaultPanic } from 'panicit'
+
+export type Panic = typeof defaultPanic
+let _panic: Panic = defaultPanic
+
+/**
+ * Customize `panic` function. By default will use `panic` from `panicit`.
+ *
+ * This is useful when you want to do handle some customized errors.
+ *
+ * # Example
+ * ```ts
+ * import {wrap, setPanic, err} from 'unwrapit'
+ *
+ * setPanic((msg: string) => {
+ *   throw new Error(msg)
+ * })
+ * const fail: Result<never, string> = err('error')
+ *
+ * fail.unwrap() // will `throw new Error('error')`
+ * ```
+ */
+export function setPanic(panic: Panic) {
+  _panic = panic
+}
 
 /**
  * Union type of Ok and Err. When you create a result value with either
@@ -146,7 +170,7 @@ export class Err<E, T = any> implements R<T, E> {
   constructor(public readonly error: E) {}
 
   unwrap(opt?: { panic: boolean }) {
-    return panic(this.error, { shouldExit: opt?.panic ?? true })
+    return _panic(this.error, { shouldExit: opt?.panic ?? false })
   }
 
   unwrapOr(v: T) {
@@ -154,9 +178,9 @@ export class Err<E, T = any> implements R<T, E> {
   }
 
   expect(errorMessage: string, opt?: { panic: boolean }) {
-    return panic(errorMessage, {
+    return _panic(errorMessage, {
       cause: this.error,
-      shouldExit: opt?.panic ?? true,
+      shouldExit: opt?.panic ?? false,
     })
   }
 }
