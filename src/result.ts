@@ -111,6 +111,10 @@ export function ok<T>(v: T): Result<T, never> {
   return new Ok(v)
 }
 
+export type WrapOption = {
+  // exit program if true in node
+  panic: boolean
+}
 /**
  * Use when return some value this stands for error.
  *
@@ -131,7 +135,7 @@ export interface R<T, E = unknown> {
   /**
    * unwrap value, panic if the value is Err.
    */
-  unwrap: (opt?: { panic: boolean }) => [E] extends [never] ? T : never
+  unwrap: (opt?: WrapOption) => [E] extends [never] ? T : never
   /**
    * if the unwrapped value is Err, will map to the given value instead.
    */
@@ -141,7 +145,7 @@ export interface R<T, E = unknown> {
    */
   expect: (
     errorMessage: string,
-    opt?: { panic: boolean }
+    opt?: WrapOption
   ) => [E] extends [never] ? T : never
 }
 
@@ -150,7 +154,7 @@ export class Ok<T> implements R<T, never> {
 
   constructor(public readonly value: T) {}
 
-  unwrap(opt?: { panic: boolean }) {
+  unwrap(opt?: WrapOption) {
     return this.value
   }
 
@@ -159,7 +163,7 @@ export class Ok<T> implements R<T, never> {
   }
 
   // to provide same type hint
-  expect(errorMessage: string, opt?: { panic: boolean }): T {
+  expect(errorMessage: string, opt?: WrapOption): T {
     return this.value
   }
 }
@@ -169,7 +173,7 @@ export class Err<E, T = any> implements R<T, E> {
 
   constructor(public readonly error: E) {}
 
-  unwrap(opt?: { panic: boolean }) {
+  unwrap(opt?: WrapOption) {
     return _panic(this.error, { shouldExit: opt?.panic ?? false })
   }
 
@@ -177,7 +181,7 @@ export class Err<E, T = any> implements R<T, E> {
     return v
   }
 
-  expect(errorMessage: string, opt?: { panic: boolean }) {
+  expect(errorMessage: string, opt?: WrapOption) {
     return _panic(errorMessage, {
       cause: this.error,
       shouldExit: opt?.panic ?? false,
