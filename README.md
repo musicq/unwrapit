@@ -87,6 +87,29 @@ const ret = fn(Math.random() < 0.5)
 ret.unwrap()
 ```
 
+### For rxjs
+
+If you are using `rxjs`, you can use the built-in operator `toWrap` to wrap the
+result into `Result` type.
+
+```ts
+import { from, map } from 'rxjs'
+import { toWrap } from 'unwrapit'
+
+from([1, 2, 3])
+  .pipe(
+    map((x) => {
+      if (x % 2 === 0) throw new Error(`num ${x} is even.`)
+      return x
+    }),
+    toWrap()
+  )
+  .subscribe((x) => {
+    if (!x.ok) return console.error(x.error) // Error: num 2 is even.
+    console.log(x.value)
+  })
+```
+
 ## API
 
 ### `unwrap`
