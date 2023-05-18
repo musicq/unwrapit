@@ -1,4 +1,4 @@
-import { panic as defaultPanic } from 'panicit'
+import {panic as defaultPanic} from 'panicit'
 
 export type Panic = typeof defaultPanic
 let _panic: Panic = defaultPanic

@@ -36,6 +36,9 @@
     "typescript": "^5.0.2",
     "vitest": "^0.29.3"
   },
+  "peerDependencies": {
+    "rxjs": "^7.8.1"
+  },
   "dependencies": {
     "panicit": "^1.2.0"
   }
