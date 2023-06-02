@@ -44,6 +44,24 @@ export function setPanic(panic: Panic) {
 export type Result<T, E = unknown> = Ok<T> | Err<E, T>
 
 /**
+ * Wrap an asynchronous function. This is useful when you are trying to wrap an
+ * async function such as `fetch`.
+ *
+ * # Example
+ *
+ * ```ts
+ * import {wrap} from 'unwrapit'
+ *
+ * const fetchWrapper = wrap(fetch)
+ * const ret = (await fetchWrapper('www.google.com')).unwrap()
+ * const json = await ret.json())
+ * ```
+ */
+export function wrap<TArgs extends any[], TReturn>(
+  func: (...args: TArgs) => Promise<TReturn>
+): (...args: TArgs) => Promise<Result<TReturn>>
+
+/**
  * Wrap an synchronous function. This is useful when you are trying to parse an
  * JSON through `JSON.parse`.
  *
@@ -62,7 +80,7 @@ export function wrap<TArgs extends any[], TReturn>(
 ): (...args: TArgs) => Result<TReturn>
 
 /**
- * Wrap an promise value. This allows you could handle error gracefully.
+ * Wrap an promise value. This allows you could handle async errors gracefully.
  *
  * # Example
  * ```ts
@@ -85,7 +103,13 @@ export function wrap(input: any) {
   if (typeof input === 'function') {
     return (...args: any[]) => {
       try {
-        return ok(input(...args))
+        const ret = input(...args)
+
+        if ('then' in ret && typeof ret.then === 'function') {
+          return wrap(ret)
+        }
+
+        return ok(ret)
       } catch (e) {
         return err(e)
       }

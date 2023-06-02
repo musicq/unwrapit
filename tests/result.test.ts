@@ -158,6 +158,34 @@ describe('result', () => {
       expect(handler.ok).toBe(false)
       expect(handler.error).toMatch(/Toggle is off\./)
     })
+
+    test('wrap a async function', async () => {
+      const asyncFn = async (shouldThrow: boolean) => {
+        if (shouldThrow) {
+          throw new Error('async error')
+        }
+
+        return 'ok'
+      }
+
+      const asyncFnWrapper = wrap(asyncFn)
+
+      const okRet = await asyncFnWrapper(false)
+      if (!okRet.ok) {
+        throw new Error('This line should never be reached.')
+      }
+
+      expect(okRet.ok).toBe(true)
+      expect(okRet.value).toBe('ok')
+
+      const errRet = await asyncFnWrapper(true)
+      if (errRet.ok) {
+        throw new Error('This line should never be reached.')
+      }
+
+      expect(errRet.ok).toBe(false)
+      expect((errRet.error as Error).message).toBe('async error')
+    })
   })
 
   describe('customized panic function', () => {
