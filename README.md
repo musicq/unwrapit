@@ -29,6 +29,16 @@ const json = tryParseJson().unwrap()
 
 ### Asynchronous function
 
+Besides synchronous functions, you can wrap an asynchronous function as well.
+
+```ts
+import {wrap} from 'unwrapit'
+
+const fetchWrapper = wrap(fetch)
+const ret = (await fetchWrapper('www.google.com')).unwrap()
+const json = await ret.json())
+```
+
 You can wrap a promise value as well.
 
 ```ts
