@@ -186,6 +186,36 @@ describe('result', () => {
       expect(errRet.ok).toBe(false)
       expect((errRet.error as Error).message).toBe('async error')
     })
+
+    test('wrap a promised based function', async () => {
+      const promiseFn = (shouldThrow: boolean) => {
+        return new Promise<string>((resolve, reject) => {
+          if (shouldThrow) {
+            return reject('async error')
+          }
+
+          return resolve('ok')
+        })
+      }
+
+      const promiseFnWrapper = wrap(promiseFn)
+
+      const okRet = await promiseFnWrapper(false)
+      if (!okRet.ok) {
+        throw new Error('This line should never be reached.')
+      }
+
+      expect(okRet.ok).toBe(true)
+      expect(okRet.value).toBe('ok')
+
+      const errRet = await promiseFnWrapper(true)
+      if (errRet.ok) {
+        throw new Error('This line should never be reached.')
+      }
+
+      expect(errRet.ok).toBe(false)
+      expect(errRet.error as string).toBe('async error')
+    })
   })
 
   describe('customized panic function', () => {
