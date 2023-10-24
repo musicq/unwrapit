@@ -1,7 +1,9 @@
 import {panic} from 'panicit'
 import {count, from, last, map, take} from 'rxjs'
 import {afterEach, describe, expect, test, vi} from 'vitest'
-import {Panic, err, ok, setPanic, wrap} from '../src/result'
+import {defineWrapConfig} from '../src'
+import {TWrapConfig, WrapConfig} from '../src/config'
+import {err, ok, setPanic, wrap} from '../src/result'
 import {toWrap} from '../src/toWrap'
 
 vi.mock('panicit', async () => {
@@ -12,9 +14,16 @@ vi.mock('panicit', async () => {
   }
 })
 
+const defaultWrapConfig = {...WrapConfig}
+
+function resetWrapConfig() {
+  defineWrapConfig(defaultWrapConfig)
+}
+
 describe('result', () => {
   afterEach(() => {
     vi.resetAllMocks()
+    resetWrapConfig()
   })
 
   describe('ok & err function', () => {
@@ -45,7 +54,7 @@ describe('result', () => {
     })
   })
 
-  describe('unwrap methods', () => {
+  describe('API tests', () => {
     test('unwrap', () => {
       const success = ok(1)
       expect(success.unwrap()).toBe(1)
@@ -56,16 +65,16 @@ describe('result', () => {
       expect(panic).toHaveBeenCalledOnce()
       expect(panic).toBeCalledWith(
         'error',
-        expect.objectContaining({ shouldExit: false })
+        expect.objectContaining({shouldExit: false})
       )
     })
 
-    test('unwrap w/o panic', () => {
+    test('unwrap w/ panic', () => {
       const error = err('error')
-      expect(error.unwrap({ panic: true })).toBeUndefined()
+      expect(error.unwrap({panic: true})).toBeUndefined()
       expect(panic).toBeCalledWith(
         'error',
-        expect.objectContaining({ shouldExit: true })
+        expect.objectContaining({shouldExit: true})
       )
     })
 
@@ -78,15 +87,24 @@ describe('result', () => {
       expect(panic).not.toHaveBeenCalledOnce()
     })
 
+    test('unwrapOrElse', () => {
+      const success = ok(1)
+      expect(success.unwrapOrElse(e => 2)).toBe(1)
+
+      const error = err<string, number>('error')
+      expect(error.unwrapOrElse(e => 2)).toBe(2)
+      expect(panic).not.toHaveBeenCalledOnce()
+    })
+
     test('expect', () => {
       const success = ok(1)
       expect(success.expect('never reach')).toBe(1)
 
       const error = err<string>('error')
-      expect(error.expect('error message')).toBeUndefined()
+      expect(error.expect('custom error message')).toBeUndefined()
       expect(panic).toHaveBeenCalledOnce()
       expect(panic).toBeCalledWith(
-        'error message',
+        'custom error message',
         expect.objectContaining({
           cause: 'error',
           shouldExit: false,
@@ -94,22 +112,76 @@ describe('result', () => {
       )
     })
 
-    test('expect w/o panic', () => {
+    test('expect w/ panic', () => {
       const error = err('error')
-      expect(error.expect('error message', { panic: true })).toBeUndefined()
+      expect(
+        error.expect('custom error message', {panic: true})
+      ).toBeUndefined()
       expect(panic).toBeCalledWith(
-        'error message',
+        'custom error message',
         expect.objectContaining({
           cause: 'error',
           shouldExit: true,
         })
       )
     })
+
+    test('mapErr', () => {
+      const success = ok(1)
+      expect(success.mapErr(e => 2)).toBe(success)
+
+      const error = err<string>('error')
+      expect(error.mapErr(e => 2)).toStrictEqual(err(2))
+    })
   })
 
   describe('wrap function', () => {
-    test('wrap a synchronous function', () => {
-      const object = { package: 'unwrapit!' }
+    describe('wrap async/promise based functions', () => {
+      async function testAsyncOrPromiseBasedFunction(
+        fn: (...args: any[]) => Promise<any>
+      ) {
+        const asyncFnWrapper = wrap(fn)
+
+        const okRet = await asyncFnWrapper(false)
+        if (!okRet.ok) {
+          throw new Error('This line should never be reached.')
+        }
+
+        expect(okRet.ok).toBe(true)
+        expect(okRet.value).toBe('ok')
+
+        const errRet = await asyncFnWrapper(true)
+        if (errRet.ok) {
+          throw new Error('This line should never be reached.')
+        }
+
+        expect(errRet.ok).toBe(false)
+        expect((errRet.error as Error).message).toBe('async error')
+      }
+
+      test('wrap an async function', async () => {
+        async function asyncFn(shouldThrow: boolean) {
+          if (shouldThrow) throw new Error('async error')
+          return 'ok'
+        }
+
+        await testAsyncOrPromiseBasedFunction(asyncFn)
+      })
+
+      test('wrap a promised based function', async () => {
+        function promiseFn(shouldThrow: boolean) {
+          return new Promise<string>((resolve, reject) => {
+            if (shouldThrow) return reject(new Error('async error'))
+            return resolve('ok')
+          })
+        }
+
+        await testAsyncOrPromiseBasedFunction(promiseFn)
+      })
+    })
+
+    test('wrap synchronous functions', () => {
+      const object = {package: 'unwrapit!'}
       const rawJson = JSON.stringify(object)
 
       let tryParseJson = wrap(() => JSON.parse(rawJson))
@@ -160,82 +232,36 @@ describe('result', () => {
       expect(handler.error).toMatch(/Toggle is off\./)
     })
 
-    test('wrap a async function', async () => {
-      const asyncFn = async (shouldThrow: boolean) => {
-        if (shouldThrow) {
-          throw new Error('async error')
-        }
+    test('wrap arbitrary value', () => {
+      const r1 = wrap(1)
+      const r2 = wrap('string')
+      const r3 = wrap([1, 2, 3])
+      const r4 = wrap({a: 1, b: true})
 
-        return 'ok'
-      }
-
-      const asyncFnWrapper = wrap(asyncFn)
-
-      const okRet = await asyncFnWrapper(false)
-      if (!okRet.ok) {
-        throw new Error('This line should never be reached.')
-      }
-
-      expect(okRet.ok).toBe(true)
-      expect(okRet.value).toBe('ok')
-
-      const errRet = await asyncFnWrapper(true)
-      if (errRet.ok) {
-        throw new Error('This line should never be reached.')
-      }
-
-      expect(errRet.ok).toBe(false)
-      expect((errRet.error as Error).message).toBe('async error')
-    })
-
-    test('wrap a promised based function', async () => {
-      const promiseFn = (shouldThrow: boolean) => {
-        return new Promise<string>((resolve, reject) => {
-          if (shouldThrow) {
-            return reject('async error')
-          }
-
-          return resolve('ok')
-        })
-      }
-
-      const promiseFnWrapper = wrap(promiseFn)
-
-      const okRet = await promiseFnWrapper(false)
-      if (!okRet.ok) {
-        throw new Error('This line should never be reached.')
-      }
-
-      expect(okRet.ok).toBe(true)
-      expect(okRet.value).toBe('ok')
-
-      const errRet = await promiseFnWrapper(true)
-      if (errRet.ok) {
-        throw new Error('This line should never be reached.')
-      }
-
-      expect(errRet.ok).toBe(false)
-      expect(errRet.error as string).toBe('async error')
+      expect(r1.unwrap()).toBe(1)
+      expect(r2.unwrap()).toBe('string')
+      expect(r3.unwrap()).toStrictEqual([1, 2, 3])
+      expect(r4.unwrap()).toStrictEqual({a: 1, b: true})
     })
   })
 
   describe('toWrap function', () => {
     test('convert value to Result', () => {
       const sub$ = from([1, 2, 3]).pipe(
-        map((x) => {
+        map(x => {
           if (x % 2 === 0) throw new Error(`num ${x} is even.`)
           return x
         }),
         toWrap()
       )
 
-      sub$.pipe(take(1)).subscribe((x) => {
+      sub$.pipe(take(1)).subscribe(x => {
         expect(x.unwrap()).toBe(1)
       })
 
-      sub$.pipe(count()).subscribe((x) => expect(x).toBe(2))
+      sub$.pipe(count()).subscribe(x => expect(x).toBe(2))
 
-      sub$.pipe(last()).subscribe((x) => {
+      sub$.pipe(last()).subscribe(x => {
         if (x.ok) {
           throw new Error('This line should never be reached.')
         }
@@ -244,9 +270,9 @@ describe('result', () => {
       })
 
       const complete$ = from([1, 2, 3]).pipe(toWrap())
-      complete$.pipe(count()).subscribe((x) => expect(x).toBe(3))
+      complete$.pipe(count()).subscribe(x => expect(x).toBe(3))
       complete$.subscribe({
-        next: (x) => expect(x.ok).toBe(true),
+        next: x => expect(x.ok).toBe(true),
         // never reach
         error: () => expect(false).toBe(true),
         // will reach
@@ -255,19 +281,42 @@ describe('result', () => {
     })
   })
 
-  describe('customized panic function', () => {
-    test('setPanic', () => {
-      class MyError extends Error {}
-      const myPanic: Panic = (msg: string) => {
-        throw new MyError(msg)
-      }
+  describe('define global wrap config', () => {
+    class MyError extends Error {}
+    const myPanic: TWrapConfig['panicFn'] = (msg: string) => {
+      throw new MyError(msg)
+    }
 
-      setPanic(myPanic)
-
-      const fail = err('error')
+    test('defineWrapConfig > panicFn', () => {
+      defineWrapConfig({panicFn: myPanic})
 
       try {
-        fail.unwrap()
+        err('error').unwrap()
+      } catch (e) {
+        expect(e).toBeInstanceOf(MyError)
+        expect(e.message).toBe('error')
+      }
+    })
+
+    test('defineWrapConfig > panic', () => {
+      defineWrapConfig({panic: true})
+
+      try {
+        err('error').unwrap()
+      } catch (e) {
+        expect(panic).toHaveBeenCalledOnce()
+        expect(panic).toBeCalledWith(
+          'error',
+          expect.objectContaining({shouldExit: true})
+        )
+      }
+    })
+
+    test('setPanic', () => {
+      setPanic(myPanic)
+
+      try {
+        err('error').unwrap()
       } catch (e) {
         expect(e).toBeInstanceOf(MyError)
         expect(e.message).toBe('error')
