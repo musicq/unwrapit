@@ -21,7 +21,7 @@
     "typecheck": "vitest typecheck"
   },
   "keywords": [
-    "result",
+    "result type",
     "typescript",
     "error handler"
   ],
