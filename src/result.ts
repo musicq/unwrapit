@@ -1,16 +1,17 @@
-import {panic as defaultPanic} from 'panicit'
+import {WrapConfig, defineWrapConfig, type TWrapConfig} from './config'
 import {TP, TR} from './types'
-import {isPromiseLike} from './utils'
-
-export type Panic = typeof defaultPanic
-let _panic: Panic = defaultPanic
+import {isPromiseLike, shouldExit} from './utils'
 
 export type WrapOption = {
-  // exit program if true in node
-  panic: boolean
+  /**
+   * If `true`, the program will exit when panic. By default is `false`.
+   */
+  panic?: boolean
 }
 
 /**
+ * @deprecated **Please use `defineWrapConfig` instead.**
+ *
  * Customize `panic` function. By default will use `panic` from `panicit`.
  *
  * This is useful when you want to do handle some customized errors.
@@ -27,8 +28,8 @@ export type WrapOption = {
  * fail.unwrap() // will `throw new Error('error')`
  * ```
  */
-export function setPanic(panic: Panic) {
-  _panic = panic
+export function setPanic(panic: TWrapConfig['panicFn']) {
+  defineWrapConfig({panicFn: panic})
 }
 
 /**
@@ -214,7 +215,7 @@ export interface R<T, E = unknown> {
    */
   unwrapOr: (v: T) => T
   /**
-   * If the unwrapped value is Err, will map the error to ok value with the given mapFn.
+   * If the unwrapped value is Err, will map the error to a value with the given mapFn.
    */
   unwrapOrElse: <U>(mapFn: (e: E) => U) => T | U
   /**
@@ -259,7 +260,7 @@ export class Err<E = unknown, T = unknown> implements R<T, E> {
   constructor(public readonly error: E) {}
 
   unwrap(opt?: WrapOption): never {
-    return _panic(this.error, {shouldExit: opt?.panic ?? false})
+    return WrapConfig.panicFn(this.error, {shouldExit: shouldExit(opt)})
   }
 
   unwrapOr(v: T) {
@@ -271,9 +272,9 @@ export class Err<E = unknown, T = unknown> implements R<T, E> {
   }
 
   expect(errorMessage: string, opt?: WrapOption | undefined): never {
-    return _panic(errorMessage, {
+    return WrapConfig.panicFn(errorMessage, {
       cause: this.error,
-      shouldExit: opt?.panic ?? false,
+      shouldExit: shouldExit(opt),
     })
   }
 
