@@ -25,7 +25,7 @@ import {err, ok} from './result'
  */
 export function toWrap<T, E = unknown>() {
   return (observable: Observable<T>) =>
-    new Observable<Result<T, E>>((subscriber) => {
+    new Observable<Result<T, E>>(subscriber => {
       const subscription = observable.subscribe({
         next(v) {
           subscriber.next(ok(v))
