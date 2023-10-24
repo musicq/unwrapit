@@ -1,7 +1,14 @@
 import {panic as defaultPanic} from 'panicit'
+import {TP, TR} from './types'
+import {isPromiseLike} from './utils'
 
 export type Panic = typeof defaultPanic
 let _panic: Panic = defaultPanic
+
+export type WrapOption = {
+  // exit program if true in node
+  panic: boolean
+}
 
 /**
  * Customize `panic` function. By default will use `panic` from `panicit`.
@@ -57,13 +64,32 @@ export type Result<T, E = unknown> = Ok<T> | Err<E, T>
  * const json = await ret.json())
  * ```
  */
-export function wrap<TArgs extends any[], TReturn>(
-  func: (...args: TArgs) => Promise<TReturn>
-): (...args: TArgs) => Promise<Result<TReturn>>
+
+// For explicit type
+//
+// ```ts
+// declare function foo(a: number): string
+// let r = wrap<Error, TF<typeof foo>>(foo)
+// // => (a: number) => Result<string, Error>
+// ```
+export function wrap<E, F extends [TP<any>, TR<any>]>(
+  func: (...args: F[0]) => Promise<F[1]>
+): (...args: F[0]) => Promise<Result<F[1], E>>
+
+// For implicit type
+//
+// ```ts
+// declare function foo(a: number): string
+// let r = wrap(foo)
+// // => (...args: string[]) => Result<string, unknown>
+// ```
+export function wrap<Args extends any[], Ret>(
+  func: (...args: Args) => Promise<Ret>
+): (...args: Args) => Promise<Result<Ret>>
 
 /**
- * Wrap an synchronous function. This is useful when you are trying to parse an
- * JSON through `JSON.parse`.
+ * Wrap an synchronous function. This is useful when you are trying to parse a
+ * synchronous function, such as `JSON.parse`.
  *
  * # Example
  *
@@ -75,14 +101,20 @@ export function wrap<TArgs extends any[], TReturn>(
  * const json = tryParseJson().unwrap()
  * ```
  */
-export function wrap<TArgs extends any[], TReturn>(
-  func: (...args: TArgs) => TReturn
-): (...args: TArgs) => Result<TReturn>
+// for explicit type
+export function wrap<E, F extends [TP<any>, TR<any>]>(
+  func: (...args: F[0]) => F[1]
+): (...args: F[0]) => Result<F[1], E>
+// for implicit type
+export function wrap<Args extends any[], Ret>(
+  func: (...args: Args) => Ret
+): (...args: Args) => Result<Ret>
 
 /**
  * Wrap an promise value. This allows you could handle async errors gracefully.
  *
  * # Example
+ *
  * ```ts
  * import {wrap} from 'unwrapit'
  *
@@ -95,17 +127,32 @@ export function wrap<TArgs extends any[], TReturn>(
  * const ret = (await wrap(promise)).unwrap()
  * ```
  */
-export function wrap<T extends Promise<any>>(
-  promise: T
-): Promise<Result<Awaited<T>>>
+export function wrap<E, T>(promise: Promise<T>): Promise<Result<T, E>>
+
+/**
+ * Wrap arbitrary value.
+ *
+ * # Example
+ *
+ * ```ts
+ * import {wrap} from 'unwrapit'
+ *
+ * const r1 = wrap(1)
+ * const r2 = wrap("string")
+ * const r3 = wrap([1, 2, 3])
+ * const r4 = wrap({a: 1, b: true})
+ * ```
+ */
+export function wrap<T extends any>(value: T): Result<T, never>
 
 export function wrap(input: any) {
+  // wrap a function
   if (typeof input === 'function') {
     return (...args: any[]) => {
       try {
         const ret = input(...args)
 
-        if ('then' in ret && typeof ret.then === 'function') {
+        if (isPromiseLike(ret)) {
           return wrap(ret)
         }
 
@@ -116,7 +163,13 @@ export function wrap(input: any) {
     }
   }
 
-  return input.then(ok).catch(err)
+  // wrap a promise value
+  if (isPromiseLike(input)) {
+    return input.then(ok).catch(err)
+  }
+
+  // wrap a value
+  return ok(input)
 }
 
 /**
@@ -135,10 +188,6 @@ export function ok<T>(v: T): Result<T, never> {
   return new Ok(v)
 }
 
-export type WrapOption = {
-  // exit program if true in node
-  panic: boolean
-}
 /**
  * Use when return some value this stands for error.
  *
@@ -151,26 +200,31 @@ export type WrapOption = {
  * const fail: Result<never, string> = err('string')
  * ```
  */
-export function err<E = unknown, T = any>(e: E): Result<T, E> {
+export function err<E = unknown, T = unknown>(e: E): Result<T, E> {
   return new Err<E, T>(e)
 }
 
 export interface R<T, E = unknown> {
   /**
-   * unwrap value, panic if the value is Err.
+   * Unwrap the contained value, will panic if the value is Err.
    */
-  unwrap: (opt?: WrapOption) => [E] extends [never] ? T : never
+  unwrap: (opt?: WrapOption) => T | never
   /**
-   * if the unwrapped value is Err, will map to the given value instead.
+   * If the unwrapped value is Err, will map to the given value instead.
    */
   unwrapOr: (v: T) => T
   /**
-   * if the unwrapped value is Err, will panic with a customized error message.
+   * If the unwrapped value is Err, will map the error to ok value with the given mapFn.
    */
-  expect: (
-    errorMessage: string,
-    opt?: WrapOption
-  ) => [E] extends [never] ? T : never
+  unwrapOrElse: <U>(mapFn: (e: E) => U) => T | U
+  /**
+   * If the unwrapped value is Err, will panic with a customized error message.
+   */
+  expect: (errorMessage: string, opt?: WrapOption) => T | never
+  /**
+   * If the unwrapped value is Err, will map the error by calling the given `errMapFn`.
+   */
+  mapErr: <U>(errMapFn: (e: E) => U) => Result<T, U>
 }
 
 export class Ok<T> implements R<T, never> {
@@ -178,7 +232,7 @@ export class Ok<T> implements R<T, never> {
 
   constructor(public readonly value: T) {}
 
-  unwrap(opt?: WrapOption) {
+  unwrap(opt?: WrapOption): T {
     return this.value
   }
 
@@ -186,29 +240,44 @@ export class Ok<T> implements R<T, never> {
     return this.value
   }
 
-  // to provide same type hint
+  unwrapOrElse<U>(mapFn: (e: never) => U): T {
+    return this.value
+  }
+
   expect(errorMessage: string, opt?: WrapOption): T {
     return this.value
   }
+
+  mapErr<U>(errMapFn: (e: never) => U): Ok<T> {
+    return this
+  }
 }
 
-export class Err<E, T = any> implements R<T, E> {
+export class Err<E = unknown, T = unknown> implements R<T, E> {
   readonly ok: false = false
 
   constructor(public readonly error: E) {}
 
-  unwrap(opt?: WrapOption) {
-    return _panic(this.error, { shouldExit: opt?.panic ?? false })
+  unwrap(opt?: WrapOption): never {
+    return _panic(this.error, {shouldExit: opt?.panic ?? false})
   }
 
   unwrapOr(v: T) {
     return v
   }
 
-  expect(errorMessage: string, opt?: WrapOption) {
+  unwrapOrElse<U>(mapFn: (e: E) => U): U {
+    return mapFn(this.error)
+  }
+
+  expect(errorMessage: string, opt?: WrapOption | undefined): never {
     return _panic(errorMessage, {
       cause: this.error,
       shouldExit: opt?.panic ?? false,
     })
+  }
+
+  mapErr<U>(errMapFn: (e: E) => U): Err<U, T> {
+    return new Err(errMapFn(this.error))
   }
 }
