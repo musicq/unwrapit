@@ -1,4 +1,9 @@
-import {panic as defaultPanic} from 'panicit'
+import {panic as defaultPanic} from 'panicit';
+
+export type Panic = (
+  message: any,
+  opt?: {cause?: any; shouldExit?: boolean}
+) => never
 
 export type TWrapConfig = {
   /**
@@ -8,7 +13,7 @@ export type TWrapConfig = {
   /**
    * Customize `panic` function. By default will use `panic` from `panicit`.
    */
-  panicFn: typeof defaultPanic
+  panicFn: Panic
 }
 
 export const WrapConfig: TWrapConfig = {

@@ -52,64 +52,56 @@ export function setPanic(panic: TWrapConfig['panicFn']) {
 export type Result<T, E = unknown> = Ok<T> | Err<E, T>
 
 /**
- * Wrap an asynchronous function. This is useful when you are trying to wrap an
- * async function such as `fetch`.
+ * wrap can secure your functions. This means even if your functions throw errors,
+ * it will still be safe to call them without worrying that they will cause
+ * your program to crash.
  *
- * # Example
+ * **wrap an async function**
  *
  * ```ts
  * import {wrap} from 'unwrapit'
  *
  * const fetchWrapper = wrap(fetch)
  * const ret = (await fetchWrapper('www.google.com')).unwrap()
- * const json = await ret.json())
+ * const content = await ret.text()
  * ```
- */
-
-// For explicit type
-//
-// ```ts
-// declare function foo(a: number): string
-// let r = wrap<Error, TF<typeof foo>>(foo)
-// // => (a: number) => Result<string, Error>
-// ```
-export function wrap<E, F extends [TP<any>, TR<any>]>(
-  func: (...args: F[0]) => Promise<F[1]>
-): (...args: F[0]) => Promise<Result<F[1], E>>
-
-// For implicit type
-//
-// ```ts
-// declare function foo(a: number): string
-// let r = wrap(foo)
-// // => (...args: string[]) => Result<string, unknown>
-// ```
-export function wrap<Args extends any[], Ret>(
-  func: (...args: Args) => Promise<Ret>
-): (...args: Args) => Promise<Result<Ret>>
-
-/**
- * Wrap an synchronous function. This is useful when you are trying to parse a
- * synchronous function, such as `JSON.parse`.
  *
- * # Example
+ * **wrap a sync function**
  *
  * ```ts
  * import {wrap} from 'unwrapit'
  *
  * const tryParseJson = wrap(() => JSON.parse(`{"package": "unwrapit!"}`))
- * // unwrap to get the value without checking if it could be failed.
  * const json = tryParseJson().unwrap()
  * ```
  */
-// for explicit type
-export function wrap<E, F extends [TP<any>, TR<any>]>(
-  func: (...args: F[0]) => F[1]
-): (...args: F[0]) => Result<F[1], E>
-// for implicit type
-export function wrap<Args extends any[], Ret>(
-  func: (...args: Args) => Ret
-): (...args: Args) => Result<Ret>
+
+// infer function type implicitly
+export function wrap<A extends any[], R>(
+  fn: (...args: A) => Promise<R>
+): (...args: A) => Promise<Result<Awaited<R>>>
+export function wrap<A extends any[], R>(
+  fn: (...args: A) => R
+): (...args: A) => Result<R>
+
+// specify error type
+export function wrap<E, F extends (...args: any[]) => any>(
+  fn: (...args: TP<F>) => Promise<TR<F>>
+): (...args: TP<F>) => Promise<Result<TR<F>, E>>
+export function wrap<E, F extends (...args: any[]) => any>(
+  fn: (...args: TP<F>) => TR<F>
+): (...args: TP<F>) => Result<TR<F>, E>
+
+// specify error & return type
+export function wrap<
+  E,
+  F extends (...args: any[]) => any,
+  R extends ReturnType<F>
+>(
+  fn: (...args: TP<F>) => ReturnType<F>
+): (
+  ...args: TP<F>
+) => R extends Promise<infer AR> ? Promise<Result<AR, E>> : Result<R, E>
 
 /**
  * Wrap an promise value. This allows you could handle async errors gracefully.

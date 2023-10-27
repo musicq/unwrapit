@@ -28,18 +28,3 @@ export type TR<T extends (...args: any) => any> = T extends (
     ? P
     : R
   : any
-
-/**
- * Resolve the parameter type and return type of a function.
- *
- * # Example
- *
- * ```ts
- * declare function foo(a: number): string
- * type t1 = TF<typeof foo> // [[a: number], string]
- *
- * declare function bar(a: number): Promise<string>
- * type t2 = TF<typeof bar> // [[a: number], string]
- * ```
- */
-export type TF<T extends (...args: any) => any> = [TP<T>, TR<T>]
