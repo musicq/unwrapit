@@ -20,7 +20,7 @@ If you have a synchronous function, you can simply wrap your function and call
 it later on.
 
 ```ts
-import { wrap } from 'unwrapit'
+import {wrap} from 'unwrapit'
 
 const tryParseJson = wrap(() => JSON.parse(`{"package": "unwrapit!"}`))
 // unwrap to get the value without checking if it could be failed.
@@ -36,13 +36,13 @@ import {wrap} from 'unwrapit'
 
 const fetchWrapper = wrap(fetch)
 const ret = (await fetchWrapper('www.google.com')).unwrap()
-const json = await ret.json())
+const json = await ret.json()
 ```
 
 You can wrap a promise value as well.
 
 ```ts
-import { wrap } from 'unwrapit'
+import {wrap} from 'unwrapit'
 
 const promise = new Promise<string>((resolve, reject) => {
   if (Math.random() < 0.5) return resolve('Yay')
@@ -59,7 +59,7 @@ Normally, you should check your value if succeed or not, then handle your
 errors. In this case, you can do this
 
 ```ts
-import { wrap } from 'unwrapit'
+import {wrap} from 'unwrapit'
 
 const promise = new Promise<string>((resolve, reject) => {
   if (Math.random() < 0.5) return resolve('Yay')
@@ -82,8 +82,8 @@ Normally, you can just simply `wrap` your function, it has `wrap`ped with Result
 automatically. But you still can use Result manually.
 
 ```ts
-import { ok, err } from 'unwrapit'
-import type { Result } from 'unwrapit'
+import {ok, err} from 'unwrapit'
+import type {Result} from 'unwrapit'
 
 const pass: Result<number, never> = ok(1)
 const fail: Result<never, string> = err('error')
@@ -103,18 +103,18 @@ If you are using `rxjs`, you can use the built-in operator `toWrap` to wrap the
 result into `Result` type.
 
 ```ts
-import { from, map } from 'rxjs'
-import { toWrap } from 'unwrapit'
+import {from, map} from 'rxjs'
+import {toWrap} from 'unwrapit'
 
 from([1, 2, 3])
   .pipe(
-    map((x) => {
+    map(x => {
       if (x % 2 === 0) throw new Error(`num ${x} is even.`)
       return x
     }),
     toWrap()
   )
-  .subscribe((x) => {
+  .subscribe(x => {
     if (!x.ok) return console.error(x.error) // Error: num 2 is even.
     console.log(x.value)
   })
@@ -183,8 +183,8 @@ By default, it will use the `panic` from
 Here's an example
 
 ```ts
-import { setPanic } from 'unwrapit'
-import type { Panic } from 'unwrapit'
+import {setPanic} from 'unwrapit'
+import type {Panic} from 'unwrapit'
 
 class MyError extends Error {}
 
