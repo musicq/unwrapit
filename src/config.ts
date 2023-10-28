@@ -2,7 +2,7 @@ import {panic as defaultPanic} from 'panicit';
 
 export type Panic = (
   message: any,
-  opt?: {cause?: any; shouldExit?: boolean}
+  opt?: {cause?: any; shouldExit?: boolean; exitCode?: number}
 ) => never
 
 export type TWrapConfig = {

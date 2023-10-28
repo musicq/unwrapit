@@ -7,6 +7,10 @@ export type WrapOption = {
    * If `true`, the program will exit when panic. By default is `false`.
    */
   panic?: boolean
+  /**
+   * Exit code when panic. By default is `1`.
+   */
+  exitCode?: number
 }
 
 /**
@@ -77,6 +81,11 @@ export type Result<T, E = unknown> = Ok<T> | Err<E, T>
  */
 
 // infer function type implicitly
+// for never return only
+export function wrap<A extends any[], R extends never>(
+  fn: (...args: A) => Result<never>
+): (...args: A) => Result<R>
+
 export function wrap<A extends any[], R>(
   fn: (...args: A) => Promise<R>
 ): (...args: A) => Promise<Result<Awaited<R>>>
@@ -85,6 +94,11 @@ export function wrap<A extends any[], R>(
 ): (...args: A) => Result<R>
 
 // specify error type
+// for never return only
+export function wrap<E, F extends (...args: any[]) => never>(
+  fn: (...args: TP<F>) => never
+): (...args: TP<F>) => Result<never, E>
+
 export function wrap<E, F extends (...args: any[]) => any>(
   fn: (...args: TP<F>) => Promise<TR<F>>
 ): (...args: TP<F>) => Promise<Result<TR<F>, E>>
@@ -93,6 +107,10 @@ export function wrap<E, F extends (...args: any[]) => any>(
 ): (...args: TP<F>) => Result<TR<F>, E>
 
 // specify error & return type
+// for never return only
+export function wrap<E, F extends (...args: any[]) => any, R extends never>(
+  fn: (...args: TP<F>) => ReturnType<F>
+): (...args: TP<F>) => Result<R, E>
 export function wrap<
   E,
   F extends (...args: any[]) => any,
@@ -252,7 +270,10 @@ export class Err<E = unknown, T = unknown> implements R<T, E> {
   constructor(public readonly error: E) {}
 
   unwrap(opt?: WrapOption): never {
-    return WrapConfig.panicFn(this.error, {shouldExit: shouldExit(opt)})
+    return WrapConfig.panicFn(this.error, {
+      shouldExit: shouldExit(opt),
+      exitCode: opt?.exitCode,
+    })
   }
 
   unwrapOr(v: T) {
@@ -267,6 +288,7 @@ export class Err<E = unknown, T = unknown> implements R<T, E> {
     return WrapConfig.panicFn(errorMessage, {
       cause: this.error,
       shouldExit: shouldExit(opt),
+      exitCode: opt?.exitCode,
     })
   }
 

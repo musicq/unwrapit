@@ -30,22 +30,38 @@ describe('Result types test', () => {
     const sf2 = (): string => ''
     const sf3 = (a: number, b: boolean): any => 1
     const sf4 = (a: number, b: boolean): string => ''
+    const sf5 = (): never => {throw new Error('some error')}
+    const sf6 = (a: number, b: boolean): never => {throw new Error('some error')}
+    const sf7 = (): never | number => {throw new Error('some error')}
+    const sf8 = (a: number, b: boolean): never | number => {throw new Error('some error')}
 
     const af1 = async (): Promise<any> => {}
     const af2 = async (): Promise<string> => ''
     const af3 = async (a: number, b: boolean): Promise<any> => {}
     const af4 = async (a: number, b: boolean): Promise<string> => ''
-    
+    const af5 = async (): Promise<never> => {throw new Error('some error')}
+    const af6 = async (a: number, b: boolean): Promise<never> => {throw new Error('some error')}
+    const af7 = async (): Promise<never | number> => {throw new Error('some error')}
+    const af8 = async (a: number, b: boolean): Promise<never | number> => {throw new Error('some error')}
+
     // implicitly infer
     expectTypeOf(wrap(sf1)).toEqualTypeOf<() => Result<any, unknown>>()
     expectTypeOf(wrap(sf2)).toEqualTypeOf<() => Result<string, unknown>>()
     expectTypeOf(wrap(sf3)).toEqualTypeOf<(a: number, b: boolean) => Result<any, unknown>>()
     expectTypeOf(wrap(sf4)).toEqualTypeOf<(a: number, b: boolean) => Result<string, unknown>>()
-
+    expectTypeOf(wrap(sf5)).toEqualTypeOf<() => Result<never, unknown>>()
+    expectTypeOf(wrap(sf6)).toEqualTypeOf<(a: number, b: boolean) => Result<never, unknown>>()
+    expectTypeOf(wrap(sf7)).toEqualTypeOf<() => Result<never | number, unknown>>()
+    expectTypeOf(wrap(sf8)).toEqualTypeOf<(a: number, b: boolean) => Result<never | number, unknown>>()
+    
     expectTypeOf(wrap(af1)).toEqualTypeOf<() => Promise<Result<any, unknown>>>()
     expectTypeOf(wrap(af2)).toEqualTypeOf<() => Promise<Result<string, unknown>>>()
     expectTypeOf(wrap(af3)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<any, unknown>>>()
     expectTypeOf(wrap(af4)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<string, unknown>>>()
+    expectTypeOf(wrap(af5)).toEqualTypeOf<() => Promise<Result<never, unknown>>>()
+    expectTypeOf(wrap(af6)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<never, unknown>>>()
+    expectTypeOf(wrap(af7)).toEqualTypeOf<() => Promise<Result<never | number, unknown>>>()
+    expectTypeOf(wrap(af8)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<never | number, unknown>>>()
 
     // specify error type
     expectTypeOf(wrap<Error, typeof sf1>(sf1)).toEqualTypeOf<() => Result<any, Error>>()
@@ -53,35 +69,61 @@ describe('Result types test', () => {
     expectTypeOf(wrap<Error, typeof sf2>(sf2)).toEqualTypeOf<() => Result<string, Error>>()
     expectTypeOf(wrap<Error, typeof sf3>(sf3)).toEqualTypeOf<(a: number, b: boolean) => Result<any, Error>>()
     expectTypeOf(wrap<Error, typeof sf4>(sf4)).toEqualTypeOf<(a: number, b: boolean) => Result<string, Error>>()
+    expectTypeOf(wrap<Error, typeof sf5>(sf5)).toEqualTypeOf<() => Result<never, Error>>()
+    expectTypeOf(wrap<Error, typeof sf6>(sf6)).toEqualTypeOf<(a: number, b: boolean) => Result<never, Error>>()
+    expectTypeOf(wrap<Error, typeof sf7>(sf7)).toEqualTypeOf<() => Result<never | number, Error>>()
+    expectTypeOf(wrap<Error, typeof sf8>(sf8)).toEqualTypeOf<(a: number, b: boolean) => Result<never | number, Error>>()
 
     expectTypeOf(wrap<Error, typeof af1>(af1)).toEqualTypeOf<() => Promise<Result<any, Error>>>()
     expectTypeOf(wrap<string[], typeof af1>(af1)).toEqualTypeOf<() => Promise<Result<any, string[]>>>()
     expectTypeOf(wrap<Error, typeof af2>(af2)).toEqualTypeOf<() => Promise<Result<string, Error>>>()
     expectTypeOf(wrap<Error, typeof af3>(af3)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<any, Error>>>()
     expectTypeOf(wrap<Error, typeof af4>(af4)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<string, Error>>>()
+    expectTypeOf(wrap<Error, typeof af5>(af5)).toEqualTypeOf<() => Promise<Result<never, Error>>>()
+    expectTypeOf(wrap<Error, typeof af6>(af6)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<never, Error>>>()
+    expectTypeOf(wrap<Error, typeof af7>(af7)).toEqualTypeOf<() => Promise<Result<never | number, Error>>>()
+    expectTypeOf(wrap<Error, typeof af8>(af8)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<never | number, Error>>>()
 
     // specify error & return type
     expectTypeOf(wrap<Error, typeof sf1, number>(sf1)).toEqualTypeOf<() => Result<number, Error>>()
     expectTypeOf(wrap<Error, typeof sf1, string>(sf1)).toEqualTypeOf<() => Result<string, Error>>()
     expectTypeOf(wrap<Error, typeof sf2, 'a'>(sf2)).toEqualTypeOf<() => Result<'a', Error>>()
+    // @ts-expect-error
+    expectTypeOf(wrap<Error, typeof sf2, number>(sf3)).toEqualTypeOf<(a: number, b: boolean) => Result<string, Error>>()
     expectTypeOf(wrap<Error, typeof sf3, number>(sf3)).toEqualTypeOf<(a: number, b: boolean) => Result<number, Error>>()
     expectTypeOf(wrap<Error, typeof sf4, 'a'>(sf4)).toEqualTypeOf<(a: number, b: boolean) => Result<'a', Error>>()
     // @ts-expect-error
-    expectTypeOf(wrap<Error, typeof sf2, number>(sf3)).toEqualTypeOf<(a: number, b: boolean) => Result<string, Error>>()
-    // @ts-expect-error
     expectTypeOf(wrap<Error, typeof sf4, number>(sf3)).toEqualTypeOf<(a: number, b: boolean) => Result<number, Error>>()
+    expectTypeOf(wrap<Error, typeof sf5, never>(sf5)).toEqualTypeOf<() => Result<never, Error>>()
+    // @ts-expect-error
+    expectTypeOf(wrap<Error, typeof sf5, string>(sf5)).toEqualTypeOf<() => Result<string, Error>>()
+    // @ts-expect-error
+    expectTypeOf(wrap<Error, typeof sf6, string>(sf6)).toEqualTypeOf<(a: number, b: boolean) => Result<string, Error>>()
+    expectTypeOf(wrap<Error, typeof sf7, number>(sf7)).toEqualTypeOf<() => Result<number, Error>>()
+    expectTypeOf(wrap<Error, typeof sf8, number>(sf8)).toEqualTypeOf<(a: number, b: boolean) => Result<number, Error>>()
+    // @ts-expect-error
+    expectTypeOf(wrap<Error, typeof sf8, string>(sf8)).toEqualTypeOf<(a: number, b: boolean) => Result<string, Error>>()
 
     expectTypeOf(wrap<Error, typeof af1, Promise<number>>(af1)).toEqualTypeOf<() => Promise<Result<number, Error>>>()
     expectTypeOf(wrap<Error, typeof af1, Promise<string>>(af1)).toEqualTypeOf<() => Promise<Result<string, Error>>>()
+    // @ts-expect-error
+    expectTypeOf(wrap<Error, typeof af1, number>(af1)).toEqualTypeOf<() => Promise<Result<number, Error>>>()
     expectTypeOf(wrap<Error, typeof af2, Promise<'a'>>(af2)).toEqualTypeOf<() => Promise<Result<'a', Error>>>()
+    // @ts-expect-error
+    expectTypeOf(wrap<Error, typeof af2, Promise<number>>(af2)).toEqualTypeOf<() => Promise<Result<number, Error>>>()
     expectTypeOf(wrap<Error, typeof af3, Promise<number>>(af3)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<number, Error>>>()
     expectTypeOf(wrap<Error, typeof af4, Promise<'a'>>(af4)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<'a', Error>>>()
     // @ts-expect-error
-    expectTypeOf(wrap<Error, typeof af1, number>(af1)).toEqualTypeOf<() => Promise<Result<number, Error>>>()
-    // @ts-expect-error
-    expectTypeOf(wrap<Error, typeof af2, Promise<number>>(af2)).toEqualTypeOf<() => Promise<Result<number, Error>>>()
-    // @ts-expect-error
     expectTypeOf(wrap<Error, typeof af4, Promise<number>>(af4)).toEqualTypeOf<() => Promise<Result<number, Error>>>()
+    expectTypeOf(wrap<Error, typeof af5, Promise<never>>(af5)).toEqualTypeOf<() => Promise<Result<never, Error>>>()
+    // @ts-expect-error
+    expectTypeOf(wrap<Error, typeof af5, Promise<string>>(af5)).toEqualTypeOf<() => Result<string, Error>>()
+    // @ts-expect-error
+    expectTypeOf(wrap<Error, typeof af6, Promise<string>>(af6)).toEqualTypeOf<(a: number, b: boolean) => Result<string, Error>>()
+    expectTypeOf(wrap<Error, typeof af7, Promise<number>>(af7)).toEqualTypeOf<() => Promise<Result<number, Error>>>()
+    expectTypeOf(wrap<Error, typeof af8, Promise<number>>(af8)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<number, Error>>>()
+    // @ts-expect-error
+    expectTypeOf(wrap<Error, typeof af8, string>(af8)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<string, Error>>>()
   })
 
   test('wrap arbitrary values', () => {

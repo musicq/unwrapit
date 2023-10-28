@@ -205,6 +205,20 @@ describe('result', () => {
       expect(jsonWrapper.error).toBeDefined()
     })
 
+    test('wrap throw functions', () => {
+      const wrappedThrownFn = wrap<Error, any, never>((): never => {
+        throw new Error('throw error')
+      })
+
+      const ret = wrappedThrownFn()
+      if (ret.ok) {
+        throw new Error('This line should never be reached.')
+      }
+
+      expect(ret.ok).toBe(false)
+      expect(ret.error.message).toBe('throw error')
+    })
+
     test('wrap a promise value', async () => {
       let controller = true
       const promise = () =>
