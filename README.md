@@ -4,7 +4,7 @@
   <a href="https://npmjs.com/package/unwrapit"><img src="https://img.shields.io/npm/v/unwrapit.svg" alt="npm package"></a>
 </p>
 
-`unwrapit` is a graceful way to handle errors in TypeScript.
+`unwrapit` provides a way to handle errors in JS/TS gracefully and intuitively.
 
 ## Documentation
 
