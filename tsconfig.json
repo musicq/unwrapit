@@ -6,6 +6,7 @@
     "strict": true,
     "noImplicitOverride": true,
     "noUnusedLocals": true,
+    "skipLibCheck": true,
     "useUnknownInCatchVariables": false,
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
