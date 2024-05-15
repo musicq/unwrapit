@@ -3,3 +3,5 @@ dist
 coverage
 
 .DS_Store
+
+tscofnig.vitest-temp.json

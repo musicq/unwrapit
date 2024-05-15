@@ -1,5 +1,5 @@
 import {describe, expectTypeOf, test} from 'vitest'
-import {Err, Ok, Result, WrapOption, err, ok, wrap} from '../src/result'
+import {Err, Ok, Result, WrapOption, err, ok, wrap} from '../src'
 
 describe('Result types test', () => {
   test('ok type', () => {
