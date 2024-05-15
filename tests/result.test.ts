@@ -1,10 +1,8 @@
 import {panic} from 'panicit'
 import {count, from, last, map, take} from 'rxjs'
 import {afterEach, describe, expect, test, vi} from 'vitest'
-import {defineWrapConfig} from '../src'
-import {TWrapConfig, WrapConfig} from '../src/config'
-import {err, ok, setPanic, wrap} from '../src/result'
-import {toWrap} from '../src/toWrap'
+import {defineWrapConfig, err, ok, toWrap, wrap, setPanic} from '../src'
+import {type TWrapConfig, WrapConfig} from '../src/config'
 
 vi.mock('panicit', async () => {
   const mod = await vi.importActual('panicit')

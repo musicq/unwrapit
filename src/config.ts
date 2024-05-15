@@ -1,4 +1,4 @@
-import {panic as defaultPanic} from 'panicit';
+import {panic as defaultPanic} from 'panicit'
 
 export type Panic = (
   message: any,
@@ -11,7 +11,8 @@ export type TWrapConfig = {
    */
   panic: boolean
   /**
-   * Customize `panic` function. By default will use `panic` from `panicit`.
+   * Customize `panic` function.
+   * By default will use `panic` from [`panicit`](https://github.com/musicq/panicit).
    */
   panicFn: Panic
 }
@@ -25,11 +26,32 @@ export const WrapConfig: TWrapConfig = {
  * Define global config for `unwrapit`.
  */
 export function defineWrapConfig(config: Partial<TWrapConfig>) {
-  if (typeof config.panic === 'boolean') {
-    WrapConfig.panic = config.panic
-  }
+  WrapConfig.panic = Boolean(config.panic)
 
   if (typeof config.panicFn === 'function') {
     WrapConfig.panicFn = config.panicFn
   }
+}
+
+/**
+ * @deprecated **Please use `defineWrapConfig` instead.**
+ *
+ * Customize `panic` function. By default will use `panic` from `panicit`.
+ *
+ * This is useful when you want to do handle some customized errors.
+ *
+ * # Example
+ * ```ts
+ * import {wrap, setPanic, err} from 'unwrapit'
+ *
+ * setPanic((msg: string) => {
+ *   throw new Error(msg)
+ * })
+ * const fail: Result<never, string> = err('error')
+ *
+ * fail.unwrap() // will `throw new Error('error')`
+ * ```
+ */
+export function setPanic(panic: TWrapConfig['panicFn']) {
+  defineWrapConfig({panicFn: panic})
 }
