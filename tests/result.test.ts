@@ -243,7 +243,7 @@ describe('result', () => {
         throw new Error('This line should never be reached.')
       }
       expect(handler.ok).toBe(false)
-      expect(handler.error).toMatch(/Toggle is off\./)
+      expect((handler.error as Error).message).toMatch(/Toggle is off\./)
     })
 
     test('wrap arbitrary value', () => {
