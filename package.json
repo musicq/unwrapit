@@ -33,7 +33,7 @@
   "author": "musicq <kui.liang.sg@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@vitest/coverage-c8": "^0.29.3",
+    "@vitest/coverage-v8": "^1.6.0",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"

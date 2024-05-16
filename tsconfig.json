@@ -10,6 +10,7 @@
     "useUnknownInCatchVariables": false,
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["ESNext", "DOM"]
+    "lib": ["ESNext", "DOM"],
+    "types": ["vitest/globals", "vitest/importMeta"]
   }
 }

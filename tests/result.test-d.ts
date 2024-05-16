@@ -11,6 +11,13 @@ describe('Result types test', () => {
     expectTypeOf(ok(1).unwrapOrElse(e => 'string')).toEqualTypeOf<string | number>()
     expectTypeOf((ok(1) as Ok<number>).unwrapOrElse(e => '1')).toEqualTypeOf<number>()
     expectTypeOf(ok(1).expect).toMatchTypeOf<(arg: string, opts?: WrapOption) => number>()
+    expectTypeOf(ok(1).match).toMatchTypeOf<(handler: {Ok: (v: number) => number}) => number>()
+    expectTypeOf(ok(1).match).toMatchTypeOf<(handler: {Err: (e: never) => number}) => number>()
+    expectTypeOf(ok(1).match).toMatchTypeOf<(handler: {Ok: (v: number) => number, Err: (e: never) => number}) => number>()
+    // @ts-expect-error
+    expectTypeOf(ok(1).match).toMatchTypeOf<(handler: {}) => number>()
+    // @ts-expect-error
+    expectTypeOf(ok(1).match).toMatchTypeOf<() => number>()
   })
 
   test('err type', () => {
@@ -23,6 +30,13 @@ describe('Result types test', () => {
     expectTypeOf((err(1) as Err<number, string>).unwrapOrElse).toEqualTypeOf<<U>(mapFn: (e: number) => U) => U>()
     expectTypeOf((err(1) as Err<number, string>).expect).toMatchTypeOf<(errorMessage: string, opts?: WrapOption) => never>()
     expectTypeOf(err(1).mapErr).toMatchTypeOf<<U>(errMapFn: (e: number) => U) => Result<unknown, U>>()
+    expectTypeOf(err<number, string>(1).match).toMatchTypeOf<(handler: {Ok: (v: string) => number}) => number>()
+    expectTypeOf(err<number, string>(1).match).toMatchTypeOf<(handler: {Err: (e: number) => number}) => number>()
+    expectTypeOf(err<number, string>(1).match).toMatchTypeOf<(handler: {Ok: (v: string) => number, Err: (e: number) => number}) => number>()
+    // @ts-expect-error
+    expectTypeOf(err<number, string>(1).match).toMatchTypeOf<(handler: {}) => number>()
+    // @ts-expect-error
+    expectTypeOf(err<number, string>(1).match).toMatchTypeOf<() => number>()
   })
 
   test('wrap type', () => {
