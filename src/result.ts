@@ -65,7 +65,7 @@ export function err<E = unknown, T = unknown>(e: E): Result<T, E> {
 
 type A<T, U> = {Ok: (v: T) => U}
 type B<E, U> = {Err: (e: E) => U}
-type C<T, E, U> = {Ok: (v: T) => U; Err: (e: E) => U}
+type C<T, E, U> = A<T, U> & B<E, U>
 
 export interface R<T, E = unknown> {
   /**
