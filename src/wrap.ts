@@ -1,13 +1,14 @@
+import {Result, err, ok} from './result'
+import {TP, TR} from './types'
+import {isPromiseLike} from './utils'
+
 /**
- * wrap can secure your functions. This means even if your functions throw errors,
- * it will still be safe to call them without worrying that they will cause
- * your program to crash.
+ * `wrap` can secure your functions even if your functions throw errors, it will
+ * still be safe to call them without worrying the crash of the program.
  *
  * **wrap an async function**
  *
  * ```ts
- * import {wrap} from 'unwrapit'
- *
  * const fetchWrapper = wrap(fetch)
  * const ret = (await fetchWrapper('www.google.com')).unwrap()
  * const content = await ret.text()
@@ -16,16 +17,10 @@
  * **wrap a sync function**
  *
  * ```ts
- * import {wrap} from 'unwrapit'
- *
  * const tryParseJson = wrap(() => JSON.parse(`{"package": "unwrapit!"}`))
  * const json = tryParseJson().unwrap()
  * ```
  */
-
-import {Result, err, ok} from './result'
-import {TP, TR} from './types'
-import {isPromiseLike} from './utils'
 
 // infer function type implicitly
 // for never return only
@@ -69,13 +64,9 @@ export function wrap<
 ) => R extends Promise<infer AR> ? Promise<Result<AR, E>> : Result<R, E>
 
 /**
- * Wrap an promise value. This allows you could handle async errors gracefully.
- *
- * # Example
+ * Wrap a promise value. This allows you handling async errors gracefully.
  *
  * ```ts
- * import {wrap} from 'unwrapit'
- *
  * const promise = new Promise<string>((resolve, reject) => {
  *   if (Math.random() < 0.5) return resolve('Yay')
  *   return reject(new Error('Random number is greater than 0.5.'))
@@ -90,15 +81,11 @@ export function wrap<E, T>(promise: Promise<T>): Promise<Result<T, E>>
 /**
  * Wrap arbitrary value.
  *
- * # Example
- *
  * ```ts
- * import {wrap} from 'unwrapit'
- *
- * const r1 = wrap(1)
- * const r2 = wrap("string")
- * const r3 = wrap([1, 2, 3])
- * const r4 = wrap({a: 1, b: true})
+ * wrap(1)
+ * wrap("string")
+ * wrap([1, 2, 3])
+ * wrap({a: 1, b: true})
  * ```
  */
 export function wrap<T extends any>(value: T): Result<T, never>
