@@ -3,44 +3,51 @@ import {shouldExit} from './utils'
 
 export type WrapOption = {
   /**
-   * If `true`, the program will exit when panic. By default is `false`.
+   * This will override the global config that is defined by `defineWrapConfig`.
+   *
+   * Set `true` to exit the program when panic is called. By default is `false`.
+   *
+   * - In browser environment, it will throw error.
+   * - In Node environment, it will call `process.exit()`
    */
   panic?: boolean
   /**
    * Exit code when panic. By default is `1`.
+   *
+   * This only works in Node environment.
    */
   exitCode?: number
 }
 
 /**
- * Union type of Ok and Err. When you create a result value with either
- * `ok` or `err`, it's a Result type.
+ * The value of Result type could be either Ok or Err. You must check it first
+ * before using it.
  *
- * # Example
  * ```ts
- * import {ok, err} from 'unwrapit'
- * import type {Result} from 'unwrapit'
+ * let v: Result<number, Error>
+ * if (!v.ok) {
+ *   // Err<Error, number>
+ *   console.error(v.error)
+ * }
+ * // Ok<number, Error>
+ * v.value
+ * ```
  *
- * const pass: Result<number, never> = ok(1)
- * const fail: Result<never, string> = err('error')
+ * Or you can `unwrap` the value directly without checking. But this would cause
+ * the program panic when the value is Err.
  *
- * // A Result type can `unwrap`.
- * pass.unwrap()
- * fail.unwrap()
+ * ```ts
+ * let v: Result<number, never>
+ * v.unwrap()
  * ```
  */
 export type Result<T, E = unknown> = Ok<T, E> | Err<E, T>
 
 /**
- * Use when return some value this stands for success.
- *
- * # Example
+ * Wrap an ok value.
  *
  * ```ts
- * import {ok} from 'unwrapit
- * import type {Result} from 'unwrapit
- *
- * const pass: Result<number, never> = ok(1)
+ * const pass = ok(1) // Result<number, never>
  * ```
  */
 export function ok<T>(v: T): Result<T, never> {
@@ -48,15 +55,10 @@ export function ok<T>(v: T): Result<T, never> {
 }
 
 /**
- * Use when return some value this stands for error.
- *
- * # Example
+ * Wrap an error value
  *
  * ```ts
- * import {err} from 'unwrapit
- * import type {Result} from 'unwrapit
- *
- * const fail: Result<never, string> = err('string')
+ * const fail = err('string') // Result<unknown, string>
  * ```
  */
 export function err<E = unknown, T = unknown>(e: E): Result<T, E> {
@@ -70,31 +72,67 @@ type C<T, E, U> = A<T, U> & B<E, U>
 export interface R<T, E = unknown> {
   /**
    * Unwrap the contained value, will panic if the value is Err.
+   *
+   * ```ts
+   * let v: Result<number, Error>
+   * v.unwrap()
+   * ```
+   *
+   * It receives `WrapOption` as the only parameter to control the behavior.
+   *
+   * ```ts
+   * v.unwrap({panic: true, exitCode: 2})
+   * ```
    */
   unwrap: (opt?: WrapOption) => T | never
   /**
-   * If the unwrapped value is Err, will map to the given value instead.
+   * It will return the given value if the contained value is Err. Otherwise
+   * returns the Ok value.
+   *
+   * ```ts
+   * ok(1).unwrapOr(2) // 1
+   * err(1).unwrapOr(2) // 2
+   * ```
    */
   unwrapOr: (v: T) => T
   /**
-   * If the unwrapped value is Err, will map the error to a value with the given mapFn.
+   * If will map the contained value, if it's an Err, to a value with the given
+   * `mapFn`. Otherwise, it will return the Ok value.
+   *
+   * ```ts
+   * err('error').unwrapOrElse(e => e.length)
+   * ```
    */
   unwrapOrElse: <U>(mapFn: (e: E) => U) => T | U
   /**
-   * If the unwrapped value is Err, will panic with a customized error message.
+   * It will panic with a customized error message if the contained value is Err.
+   * Otherwise, returns the Ok value.
+   *
+   * ```ts
+   * err('error').expect('it panic with error')
+   * ```
    */
   expect: (errorMessage: string, opt?: WrapOption) => T | never
   /**
-   * If the unwrapped value is Err, will map the error by calling the given `errMapFn`.
+   * It will map the error by calling the given `errMapFn` if the unwrapped
+   * value is Err. Otherwise, returns the Ok value.
+   *
+   * ```ts
+   * err('error').mapErr(e => e.length)
+   * ```
    */
   mapErr: <U>(errMapFn: (e: E) => U) => Result<T, U>
   /**
-   * Handle error and ok Result value at one place, and return the mapped value
-   *
-   * # Example
+   * It handle Err and Ok Result value at one place, and returns the matched
+   * function's value.
    *
    * ```ts
-   * const res = ok<number, string>(1).match({Ok: v => v + 1, Err: e => e.length})
+   * const res = ok<number, string>(1).match({
+   *   Ok: v => v + 1,
+   *   Err: e => e.length
+   * })
+   *
+   * res // 2
    * ```
    */
   match: <U>(handler: A<T, U> | B<E, U> | C<T, E, U>) => U

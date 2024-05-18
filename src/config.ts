@@ -7,11 +7,18 @@ export type Panic = (
 
 export type TWrapConfig = {
   /**
-   * If `true`, the program will exit when panic. By default is `false`.
+   * Set `true` to exit the program when panic is called. By default is `false`.
+   *
+   * - In browser environment, it will throw error.
+   * - In Node environment, it will call `process.exit()`
    */
   panic: boolean
   /**
    * Customize `panic` function.
+   *
+   * This is useful when you want to do some extra
+   * logic like report errors or resource clean up before exit.
+   *
    * By default will use `panic` from [`panicit`](https://github.com/musicq/panicit).
    */
   panicFn: Panic
@@ -24,6 +31,16 @@ export const WrapConfig: TWrapConfig = {
 
 /**
  * Define global config for `unwrapit`.
+ *
+ * # Example
+ * ```ts
+ * import { defineWrapConfig } from 'unwrapit'
+ *
+ * defineWrapConfig({
+ *   panic: true,
+ *   panicFn: myPanicFn
+ * })
+ * ```
  */
 export function defineWrapConfig(config: Partial<TWrapConfig>) {
   WrapConfig.panic = Boolean(config.panic)
@@ -38,7 +55,10 @@ export function defineWrapConfig(config: Partial<TWrapConfig>) {
  *
  * Customize `panic` function. By default will use `panic` from `panicit`.
  *
- * This is useful when you want to do handle some customized errors.
+ * This is useful when you want to do some extra
+ * logic like report errors or resource clean up before exit.
+ *
+ * By default will use `panic` from [`panicit`](https://github.com/musicq/panicit).
  *
  * # Example
  * ```ts
