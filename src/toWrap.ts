@@ -5,8 +5,6 @@ import {err, ok} from './result'
 /**
  * Convert rxjs pipe result into Result type.
  *
- * # Example
- *
  * ```ts
  * import {from, map} from 'rxjs'
  * import {toWrap} from 'unwrapit'
