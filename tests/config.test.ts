@@ -1,12 +1,12 @@
 import './helper'
 import {panic} from 'panicit'
 import {defineWrapConfig, err, setPanic} from '../src'
-import {type TWrapConfig} from '../src/config'
+import {type WrapConfig} from '../src/config'
 
 describe('config', () => {
   describe('define global wrap config', () => {
     class MyError extends Error {}
-    const myPanic: TWrapConfig['panicFn'] = (msg: string) => {
+    const myPanic: WrapConfig['panicFn'] = (msg: string) => {
       throw new MyError(msg)
     }
 
@@ -30,7 +30,7 @@ describe('config', () => {
         expect(panic).toHaveBeenCalledOnce()
         expect(panic).toBeCalledWith(
           'error',
-          expect.objectContaining({shouldExit: true})
+          expect.objectContaining({exit: true})
         )
       }
     })

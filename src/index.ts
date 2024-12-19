@@ -1,6 +1,6 @@
 export {panic} from 'panicit'
-export {defineWrapConfig, setPanic} from './config'
-export type {Panic, TWrapConfig as WrapConfig} from './config'
+export {defineUnwrapitConfig, defineWrapConfig, setPanic} from './config'
+export type {Panic, WrapConfig} from './config'
 export {err, ok} from './result'
 export type {Result, WrapOption} from './result'
 export {wrap} from './wrap'

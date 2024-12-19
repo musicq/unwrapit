@@ -1,6 +1,7 @@
 import './helper'
 import {panic} from 'panicit'
 import {err, ok} from '../src'
+import {Err} from '../src/result'
 
 describe('result', () => {
   describe('ok & err function', () => {
@@ -42,7 +43,7 @@ describe('result', () => {
       expect(panic).toHaveBeenCalledOnce()
       expect(panic).toBeCalledWith(
         'error',
-        expect.objectContaining({shouldExit: false})
+        expect.objectContaining({exit: false})
       )
     })
 
@@ -51,7 +52,7 @@ describe('result', () => {
       expect(error.unwrap({panic: true})).toBeUndefined()
       expect(panic).toBeCalledWith(
         'error',
-        expect.objectContaining({shouldExit: true})
+        expect.objectContaining({exit: true})
       )
     })
 
@@ -84,7 +85,7 @@ describe('result', () => {
         'custom error message',
         expect.objectContaining({
           cause: 'error',
-          shouldExit: false,
+          exit: false,
         })
       )
     })
@@ -98,7 +99,7 @@ describe('result', () => {
         'custom error message',
         expect.objectContaining({
           cause: 'error',
-          shouldExit: true,
+          exit: true,
         })
       )
     })
@@ -107,8 +108,10 @@ describe('result', () => {
       const success = ok(1)
       expect(success.mapErr(e => 2)).toBe(success)
 
-      const error = err<string>('error')
-      expect(error.mapErr(e => 2)).toStrictEqual(err(2))
+      const error = err<string>('error').mapErr(e => 2)
+      expect(error).toStrictEqual(
+        expect.objectContaining({ok: false, error: 2})
+      )
     })
 
     test('match', () => {

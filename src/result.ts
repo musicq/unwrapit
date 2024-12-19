@@ -1,4 +1,4 @@
-import {WrapConfig} from './config'
+import {wrapConfig} from './config'
 import {shouldExit} from './utils'
 
 export type WrapOption = {
@@ -51,7 +51,7 @@ export type Result<T, E = unknown> = Ok<T, E> | Err<E, T>
  * ```
  */
 export function ok<T>(v: T): Result<T, never> {
-  return new Ok(v)
+  return createResult(true, v) as Ok<T>
 }
 
 /**
@@ -62,7 +62,7 @@ export function ok<T>(v: T): Result<T, never> {
  * ```
  */
 export function err<E = unknown, T = unknown>(e: E): Result<T, E> {
-  return new Err<E, T>(e)
+  return createResult(false, e) as unknown as Err<E, T>
 }
 
 type A<T, U> = {Ok: (v: T) => U}
@@ -138,79 +138,92 @@ export interface R<T, E = unknown> {
   match: <U>(handler: A<T, U> | B<E, U> | C<T, E, U>) => U
 }
 
-export class Ok<T, E = never> implements R<T, E> {
+export abstract class Ok<T, E = never> implements R<T, E> {
   readonly ok: true = true
-
-  constructor(public readonly value: T) {}
-
-  unwrap(opt?: WrapOption): T {
-    return this.value
-  }
-
-  unwrapOr(v: T) {
-    return this.value
-  }
-
-  unwrapOrElse<U>(mapFn: (e: never) => U): T {
-    return this.value
-  }
-
-  expect(errorMessage: string, opt?: WrapOption): T {
-    return this.value
-  }
-
-  mapErr<U>(errMapFn: (e: never) => U): Ok<T> {
-    return this
-  }
-
-  match<U>(handler: A<T, U> | B<E, U> | C<T, E, U>): U {
-    if ('Ok' in handler) {
-      return handler.Ok(this.value)
-    }
-
-    /* v8 ignore next 3 */
-    return undefined as U
-  }
+  readonly value: T
+  unwrap: (opt?: WrapOption) => T
+  unwrapOr: (v: T) => T
+  unwrapOrElse: <U>(mapFn: (e: never) => U) => T
+  expect: (errorMessage: string, opt?: WrapOption) => T
+  mapErr: <U>(errMapFn: (e: never) => U) => Ok<T>
+  match: <U>(handler: A<T, U> | B<E, U> | C<T, E, U>) => U
 }
 
-export class Err<E = unknown, T = unknown> implements R<T, E> {
+export abstract class Err<E = unknown, T = unknown> implements R<T, E> {
   readonly ok: false = false
+  readonly error: E
+  unwrap: (opt?: WrapOption) => never
+  unwrapOr: (v: T) => T
+  unwrapOrElse: <U>(mapFn: (e: E) => U) => U
+  expect: (errorMessage: string, opt?: WrapOption | undefined) => never
+  mapErr: <U>(errMapFn: (e: E) => U) => Err<U, T>
+  match: <U>(handler: A<T, U> | B<E, U> | C<T, E, U>) => U
+}
 
-  constructor(public readonly error: E) {}
+function createResult<T, E>(ok: boolean, value: T | E) {
+  const result = {
+    ok,
+    unwrap(opt?: WrapOption) {
+      if (ok) {
+        return value as T
+      }
 
-  unwrap(opt?: WrapOption): never {
-    return WrapConfig.panicFn(this.error, {
-      shouldExit: shouldExit(opt),
-      exitCode: opt?.exitCode,
-    })
+      return wrapConfig.panicFn(value as E, {
+        exit: shouldExit(opt),
+        exitCode: opt?.exitCode,
+      })
+    },
+    unwrapOr(v: T) {
+      return ok ? (value as T) : v
+    },
+    unwrapOrElse<U>(mapFn: (e: never) => U) {
+      return ok ? (value as T) : mapFn(value as never)
+    },
+    expect(errorMessage: string, opt?: WrapOption) {
+      if (ok) {
+        return value as T
+      }
+
+      return wrapConfig.panicFn(errorMessage, {
+        cause: value,
+        exit: shouldExit(opt),
+        exitCode: opt?.exitCode,
+      })
+    },
+    mapErr<U>(errMapFn: (e: never) => U) {
+      if (ok) {
+        return result as Ok<T>
+      }
+
+      return createResult(false, errMapFn(value as never)) as unknown as Err<
+        U,
+        T
+      >
+    },
+    match<U>(handler: A<T, U> | B<E, U> | C<T, E, U>) {
+      if (ok) {
+        if ('Ok' in handler) {
+          return handler.Ok(value as T)
+        }
+
+        return undefined as U
+      }
+
+      if ('Err' in handler) {
+        return handler.Err(value as E)
+      }
+
+      return undefined as U
+    },
   }
 
-  unwrapOr(v: T) {
-    return v
+  if (ok) {
+    // Ok<T, E>
+    ;(result as any).value = value
+  } else {
+    // Err<E, T>
+    ;(result as any).error = value
   }
 
-  unwrapOrElse<U>(mapFn: (e: E) => U): U {
-    return mapFn(this.error)
-  }
-
-  expect(errorMessage: string, opt?: WrapOption | undefined): never {
-    return WrapConfig.panicFn(errorMessage, {
-      cause: this.error,
-      shouldExit: shouldExit(opt),
-      exitCode: opt?.exitCode,
-    })
-  }
-
-  mapErr<U>(errMapFn: (e: E) => U): Err<U, T> {
-    return new Err(errMapFn(this.error))
-  }
-
-  match<U>(handler: A<T, U> | B<E, U> | C<T, E, U>): U {
-    if ('Err' in handler) {
-      return handler.Err(this.error)
-    }
-
-    /* v8 ignore next 3 */
-    return undefined as U
-  }
+  return Object.freeze(result) as Ok<T, E> | Err<E, T>
 }

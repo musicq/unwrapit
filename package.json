@@ -8,6 +8,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.cjs",
       "import": "./dist/index.js"
     }
@@ -42,6 +43,6 @@
     "rxjs": "^7.8.1"
   },
   "dependencies": {
-    "panicit": "^1.3.0"
+    "panicit": "^2.0.1"
   }
 }
