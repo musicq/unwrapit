@@ -1,17 +1,17 @@
 import './helper'
 import {panic} from 'panicit'
-import {defineWrapConfig, err, setPanic} from '../src'
-import {type TWrapConfig} from '../src/config'
+import {defineUnwrapitConfig, err, setPanic} from '../src'
+import {type WrapConfig} from '../src/config'
 
 describe('config', () => {
   describe('define global wrap config', () => {
     class MyError extends Error {}
-    const myPanic: TWrapConfig['panicFn'] = (msg: string) => {
+    const myPanic: WrapConfig['panicFn'] = (msg: string) => {
       throw new MyError(msg)
     }
 
     test('defineWrapConfig > panicFn', () => {
-      defineWrapConfig({panicFn: myPanic})
+      defineUnwrapitConfig({panicFn: myPanic})
 
       try {
         err('error').unwrap()
@@ -22,7 +22,7 @@ describe('config', () => {
     })
 
     test('defineWrapConfig > panic', () => {
-      defineWrapConfig({panic: true})
+      defineUnwrapitConfig({panic: true})
 
       try {
         err('error').unwrap()
@@ -30,7 +30,7 @@ describe('config', () => {
         expect(panic).toHaveBeenCalledOnce()
         expect(panic).toBeCalledWith(
           'error',
-          expect.objectContaining({shouldExit: true})
+          expect.objectContaining({exit: true})
         )
       }
     })

@@ -1,4 +1,4 @@
-import {WrapConfig} from './config'
+import {wrapConfig} from './config'
 import {shouldExit} from './utils'
 
 export type WrapOption = {
@@ -179,8 +179,8 @@ export class Err<E = unknown, T = unknown> implements R<T, E> {
   constructor(public readonly error: E) {}
 
   unwrap(opt?: WrapOption): never {
-    return WrapConfig.panicFn(this.error, {
-      shouldExit: shouldExit(opt),
+    return wrapConfig.panicFn(this.error, {
+      exit: shouldExit(opt),
       exitCode: opt?.exitCode,
     })
   }
@@ -194,9 +194,9 @@ export class Err<E = unknown, T = unknown> implements R<T, E> {
   }
 
   expect(errorMessage: string, opt?: WrapOption | undefined): never {
-    return WrapConfig.panicFn(errorMessage, {
+    return wrapConfig.panicFn(errorMessage, {
       cause: this.error,
-      shouldExit: shouldExit(opt),
+      exit: shouldExit(opt),
       exitCode: opt?.exitCode,
     })
   }

@@ -1,5 +1,5 @@
-import {defineWrapConfig} from '../src'
-import {WrapConfig} from '../src/config'
+import {defineUnwrapitConfig} from '../src'
+import {wrapConfig} from '../src/config'
 
 vi.mock('panicit', async () => {
   const mod = await vi.importActual('panicit')
@@ -9,10 +9,10 @@ vi.mock('panicit', async () => {
   }
 })
 
-const defaultWrapConfig = {...WrapConfig}
+const defaultWrapConfig = {...wrapConfig}
 
 function resetWrapConfig() {
-  defineWrapConfig(defaultWrapConfig)
+  defineUnwrapitConfig(defaultWrapConfig)
 }
 
 afterEach(() => {

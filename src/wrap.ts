@@ -1,6 +1,7 @@
-import {Result, err, ok} from './result'
-import {TP, TR} from './types'
-import {isPromiseLike} from './utils'
+import {err, ok} from './result'
+import {isPromise} from './utils'
+import type {Result} from './result'
+import type {TP, TR} from './types'
 
 /**
  * `wrap` can secure your functions even if your functions throw errors, it will
@@ -56,7 +57,7 @@ export function wrap<E, F extends (...args: any[]) => any, R extends never>(
 export function wrap<
   E,
   F extends (...args: any[]) => any,
-  R extends ReturnType<F>
+  R extends ReturnType<F>,
 >(
   fn: (...args: TP<F>) => ReturnType<F>
 ): (
@@ -97,7 +98,7 @@ export function wrap(input: any) {
       try {
         const ret = input(...args)
 
-        if (isPromiseLike(ret)) {
+        if (isPromise(ret)) {
           return wrap(ret)
         }
 
@@ -109,7 +110,7 @@ export function wrap(input: any) {
   }
 
   // wrap a promise value
-  if (isPromiseLike(input)) {
+  if (isPromise(input)) {
     return input.then(ok).catch(err)
   }
 

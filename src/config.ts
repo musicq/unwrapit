@@ -1,30 +1,28 @@
 import {panic as defaultPanic} from 'panicit'
 
-export type Panic = (
-  message: any,
-  opt?: {cause?: any; shouldExit?: boolean; exitCode?: number}
-) => never
+export type Panic = typeof defaultPanic
 
-export type TWrapConfig = {
+export type WrapConfig = {
   /**
    * Set `true` to exit the program when panic is called. By default is `false`.
    *
    * - In browser environment, it will throw error.
-   * - In Node environment, it will call `process.exit()`
+   * - In Node environment, it will call `process.exit()` to terminate process.
    */
   panic: boolean
   /**
    * Customize `panic` function.
    *
-   * This is useful when you want to do some extra
-   * logic like report errors or resource clean up before exit.
+   * This is useful when you want to do some extra logics,
+   * such as reporting errors or doing resource clean up before exit.
    *
    * By default will use `panic` from [`panicit`](https://github.com/musicq/panicit).
    */
   panicFn: Panic
 }
 
-export const WrapConfig: TWrapConfig = {
+// global unwrapit config
+export const wrapConfig: WrapConfig = {
   panic: false,
   panicFn: defaultPanic,
 }
@@ -32,35 +30,35 @@ export const WrapConfig: TWrapConfig = {
 /**
  * Define global config for `unwrapit`.
  *
- * # Example
  * ```ts
- * import { defineWrapConfig } from 'unwrapit'
+ * import { defineUnwrapitConfig } from 'unwrapit'
  *
- * defineWrapConfig({
+ * defineUnwrapitConfig({
  *   panic: true,
  *   panicFn: myPanicFn
  * })
  * ```
  */
-export function defineWrapConfig(config: Partial<TWrapConfig>) {
-  WrapConfig.panic = Boolean(config.panic)
+export function defineUnwrapitConfig(config: Partial<WrapConfig>) {
+  if (config.panic !== undefined) {
+    wrapConfig.panic = !!config.panic
+  }
 
   if (typeof config.panicFn === 'function') {
-    WrapConfig.panicFn = config.panicFn
+    wrapConfig.panicFn = config.panicFn
   }
 }
 
 /**
- * @deprecated **Please use `defineWrapConfig` instead.**
+ * @deprecated
+ * Use `defineUnwrapitConfig` instead.
+ */
+export const defineWrapConfig = defineUnwrapitConfig
+
+/**
+ * @deprecated
+ * Use `defineWrapConfig` instead.
  *
- * Customize `panic` function. By default will use `panic` from `panicit`.
- *
- * This is useful when you want to do some extra
- * logic like report errors or resource clean up before exit.
- *
- * By default will use `panic` from [`panicit`](https://github.com/musicq/panicit).
- *
- * # Example
  * ```ts
  * import {wrap, setPanic, err} from 'unwrapit'
  *
@@ -72,6 +70,6 @@ export function defineWrapConfig(config: Partial<TWrapConfig>) {
  * fail.unwrap() // will `throw new Error('error')`
  * ```
  */
-export function setPanic(panic: TWrapConfig['panicFn']) {
-  defineWrapConfig({panicFn: panic})
+export function setPanic(panic: WrapConfig['panicFn']) {
+  defineUnwrapitConfig({panicFn: panic})
 }
