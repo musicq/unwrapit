@@ -1,5 +1,5 @@
 import {count, from, last, map, take} from 'rxjs'
-import {toWrap} from '../src'
+import {toWrap} from '../src/rxjs'
 
 describe('toWrap function', () => {
   test('convert value to Result', () => {
