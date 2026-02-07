@@ -1,6 +1,6 @@
 {
   "name": "unwrapit",
-  "version": "2.5.0",
+  "version": "3.0.0",
   "description": "A graceful way to handle errors in Typescript",
   "type": "module",
   "main": "./dist/index.cjs",
