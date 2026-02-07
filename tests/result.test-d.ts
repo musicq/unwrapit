@@ -141,6 +141,62 @@ describe('Result types test', () => {
     expectTypeOf(wrap<Error, typeof af8, string>(af8)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<string, Error>>>()
   })
 
+  test('wrap curried version - wrap<E>()', () => {
+    const sf1 = (): any => 1
+    const sf2 = (): string => ''
+    const sf3 = (a: number, b: boolean): any => 1
+    const sf4 = (a: number, b: boolean): string => ''
+
+    const af1 = async (): Promise<any> => {}
+    const af2 = async (): Promise<string> => ''
+    const af3 = async (a: number, b: boolean): Promise<any> => {}
+    const af4 = async (a: number, b: boolean): Promise<string> => ''
+
+    expectTypeOf(wrap<Error>()(sf1)).toEqualTypeOf<() => Result<any, Error>>()
+    expectTypeOf(wrap<string[]>()(sf1)).toEqualTypeOf<() => Result<any, string[]>>()
+    expectTypeOf(wrap<Error>()(sf2)).toEqualTypeOf<() => Result<string, Error>>()
+    expectTypeOf(wrap<Error>()(sf3)).toEqualTypeOf<(a: number, b: boolean) => Result<any, Error>>()
+    expectTypeOf(wrap<Error>()(sf4)).toEqualTypeOf<(a: number, b: boolean) => Result<string, Error>>()
+
+    expectTypeOf(wrap<Error>()(af1)).toEqualTypeOf<() => Promise<Result<any, Error>>>()
+    expectTypeOf(wrap<string[]>()(af1)).toEqualTypeOf<() => Promise<Result<any, string[]>>>()
+    expectTypeOf(wrap<Error>()(af2)).toEqualTypeOf<() => Promise<Result<string, Error>>>()
+    expectTypeOf(wrap<Error>()(af3)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<any, Error>>>()
+    expectTypeOf(wrap<Error>()(af4)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<string, Error>>>()
+
+    expectTypeOf(wrap<Error>()(Promise.resolve(1))).toEqualTypeOf<Promise<Result<number, Error>>>()
+    expectTypeOf(wrap<Error>()(1)).toEqualTypeOf<Result<number, Error>>()
+    expectTypeOf(wrap<Error>()('string')).toEqualTypeOf<Result<string, Error>>()
+  })
+
+  test('wrap curried version - wrap<E, Ok>()', () => {
+    const sf1 = (): any => 1
+    const sf2 = (): string => ''
+    const sf3 = (a: number, b: boolean): any => 1
+    const sf4 = (a: number, b: boolean): string => ''
+
+    const af1 = async (): Promise<any> => {}
+    const af2 = async (): Promise<string> => ''
+    const af3 = async (a: number, b: boolean): Promise<any> => {}
+    const af4 = async (a: number, b: boolean): Promise<string> => ''
+
+    expectTypeOf(wrap<Error, number>()(sf1)).toEqualTypeOf<() => Result<number, Error>>()
+    expectTypeOf(wrap<Error, string>()(sf1)).toEqualTypeOf<() => Result<string, Error>>()
+    expectTypeOf(wrap<SyntaxError, Record<string, any>>()(sf1)).toEqualTypeOf<() => Result<Record<string, any>, SyntaxError>>()
+    expectTypeOf(wrap<Error, 'a'>()(sf2)).toEqualTypeOf<() => Result<'a', Error>>()
+    expectTypeOf(wrap<Error, number>()(sf3)).toEqualTypeOf<(a: number, b: boolean) => Result<number, Error>>()
+    expectTypeOf(wrap<Error, 'a'>()(sf4)).toEqualTypeOf<(a: number, b: boolean) => Result<'a', Error>>()
+
+    expectTypeOf(wrap<Error, number>()(af1)).toEqualTypeOf<() => Promise<Result<number, Error>>>()
+    expectTypeOf(wrap<Error, string>()(af1)).toEqualTypeOf<() => Promise<Result<string, Error>>>()
+    expectTypeOf(wrap<Error, 'a'>()(af2)).toEqualTypeOf<() => Promise<Result<'a', Error>>>()
+    expectTypeOf(wrap<Error, number>()(af3)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<number, Error>>>()
+    expectTypeOf(wrap<Error, 'a'>()(af4)).toEqualTypeOf<(a: number, b: boolean) => Promise<Result<'a', Error>>>()
+
+    expectTypeOf(wrap<Error, string>()(Promise.resolve(1))).toEqualTypeOf<Promise<Result<string, Error>>>()
+    expectTypeOf(wrap<Error, string>()(1)).toEqualTypeOf<Result<string, Error>>()
+  })
+
   test('wrap arbitrary values', () => {
     expectTypeOf(wrap(Promise.resolve(1))).toEqualTypeOf<Promise<Result<number, unknown>>>()
     expectTypeOf(wrap<Error, number>(Promise.resolve(1))).toEqualTypeOf<Promise<Result<number, Error>>>()

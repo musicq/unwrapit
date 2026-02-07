@@ -1,3 +1,6 @@
+declare const Infer: unique symbol
+export type Infer = typeof Infer
+
 /**
  * Alias for built-in `Parameters` type.
  */

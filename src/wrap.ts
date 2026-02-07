@@ -1,7 +1,7 @@
 import {err, ok} from './result'
 import {isPromise} from './utils'
 import type {Result} from './result'
-import type {TP, TR} from './types'
+import type {Infer, TP, TR} from './types'
 
 /**
  * `wrap` can secure your functions even if your functions throw errors, it will
@@ -22,6 +22,24 @@ import type {TP, TR} from './types'
  * const json = tryParseJson().unwrap()
  * ```
  */
+
+type ExcludePromise<T> = T extends Promise<any> ? never : T
+
+export interface WrapFn<E, Ok = Infer> {
+  <A extends any[], R>(
+    fn: (...args: A) => Promise<R>
+  ): (...args: A) => Promise<Result<Ok extends Infer ? Awaited<R> : Ok, E>>
+
+  <A extends any[], R extends ExcludePromise<any>>(
+    fn: (...args: A) => R
+  ): (...args: A) => Result<Ok extends Infer ? R : Ok, E>
+
+  <T>(promise: Promise<T>): Promise<Result<Ok extends Infer ? T : Ok, E>>
+
+  <T extends ExcludePromise<any>>(value: T): Result<Ok extends Infer ? T : Ok, E>
+}
+
+export function wrap<E = unknown, Ok = Infer>(): WrapFn<E, Ok>
 
 // infer function type implicitly
 // for never return only
@@ -91,7 +109,11 @@ export function wrap<E, T>(promise: Promise<T>): Promise<Result<T, E>>
  */
 export function wrap<T extends any>(value: T): Result<T, never>
 
-export function wrap(input: any) {
+export function wrap(input?: any) {
+  if (arguments.length === 0) {
+    return (input: any) => wrap(input)
+  }
+
   // wrap a function
   if (typeof input === 'function') {
     return (...args: any[]) => {
