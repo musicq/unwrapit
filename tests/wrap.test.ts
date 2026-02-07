@@ -124,4 +124,47 @@ describe('wrap function', () => {
     expect(r3.unwrap()).toStrictEqual([1, 2, 3])
     expect(r4.unwrap()).toStrictEqual({a: 1, b: true})
   })
+
+  describe('wrap curried version', () => {
+    test('wrap<E>()(fn)', () => {
+      const syncFn = (x: number) => x * 2
+      const wrappedSync = wrap<Error>()(syncFn)
+
+      const result = wrappedSync(5)
+      expect(result.unwrap()).toBe(10)
+    })
+
+    test('wrap<E>()(asyncFn)', async () => {
+      const asyncFn = async (x: number) => x * 2
+      const wrappedAsync = wrap<Error>()(asyncFn)
+
+      const result = await wrappedAsync(5)
+      expect(result.unwrap()).toBe(10)
+    })
+
+    test('wrap<E>()(promise)', async () => {
+      const result = await wrap<Error>()(Promise.resolve(42))
+      expect(result.unwrap()).toBe(42)
+    })
+
+    test('wrap<E>()(value)', () => {
+      const result = wrap<Error>()(42)
+      expect(result.unwrap()).toBe(42)
+    })
+
+    test('handles errors', () => {
+      const throwingFn = (): string => {
+        throw new Error('test error')
+      }
+      const wrapped = wrap<Error>()(throwingFn)
+
+      const result = wrapped()
+      if (result.ok) {
+        throw new Error('This line should never be reached.')
+      }
+
+      expect(result.ok).toBe(false)
+      expect((result.error as Error).message).toBe('test error')
+    })
+  })
 })
