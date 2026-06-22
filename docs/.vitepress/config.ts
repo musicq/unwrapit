@@ -17,6 +17,7 @@ export default defineConfig({
         text: 'Guide',
         items: [
           {text: 'Getting Started', link: '/guide/getting-started'},
+          {text: 'Why Use It', link: '/guide/why-use-it'},
           {text: 'Result Flow', link: '/guide/result-flow'},
           {text: 'Configuration', link: '/guide/configuration'},
           {text: 'RxJS', link: '/guide/rxjs'},
