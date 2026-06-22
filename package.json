@@ -21,6 +21,9 @@
   "repository": "musicq/unwrapit",
   "scripts": {
     "build": "tsup src/index.ts src/rxjs.ts --dts --minify --format cjs,esm",
+    "docs:build": "vitepress build docs",
+    "docs:dev": "vitepress dev docs",
+    "docs:preview": "vitepress preview docs",
     "prepublish": "npm run build",
     "test": "vitest",
     "coverage": "vitest run --coverage",
@@ -38,10 +41,12 @@
   ],
   "author": "musicq <kui.liang.sg@gmail.com>",
   "license": "MIT",
+  "packageManager": "pnpm@9.15.4",
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.8",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
+    "vitepress": "^1.6.4",
     "vitest": "^2.1.8"
   },
   "peerDependencies": {

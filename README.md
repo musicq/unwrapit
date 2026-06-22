@@ -6,6 +6,16 @@
 
 `unwrapit` provides a way to handle errors in JS/TS gracefully and intuitively. Inspired by Rust's `Result` type, it lets you wrap functions, promises, and values so that errors are captured as values instead of thrown exceptions.
 
+## Documentation
+
+The docs source lives in [`docs`](./docs) and can be previewed locally:
+
+```shell
+pnpm run docs:dev
+```
+
+The legacy GitBook site is still available at https://musicq.gitbook.io/unwrapit/.
+
 ## Getting started
 
 ### Installation
