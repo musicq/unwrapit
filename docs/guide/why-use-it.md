@@ -77,6 +77,10 @@ function handler() {
 }
 ```
 
+When you know the error type, use the curried `wrap<Error>()(fn)` form so
+TypeScript can still infer the wrapped function's parameters and success value.
+See [Type annotations](/api/wrap#type-annotations) for the full pattern.
+
 ## Try/catch noise
 
 Now consider a flow where each async step depends on the previous one. You might
