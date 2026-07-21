@@ -2,7 +2,8 @@ import {defineConfig} from 'vitepress'
 
 export default defineConfig({
   title: 'unwrapit',
-  description: 'A graceful way to handle errors in TypeScript',
+  description:
+    'Turn throwing TypeScript functions and promises into typed Result values with one tiny API',
   cleanUrls: true,
   lastUpdated: true,
   themeConfig: {

@@ -9,6 +9,13 @@ export function shouldExit(opt?: WrapOption): boolean {
   return wrapConfig.panic
 }
 
-export function isPromise(input: any): boolean {
-  return input instanceof Promise
+export function isPromiseLike(input: unknown): input is PromiseLike<unknown> {
+  if (
+    input === null ||
+    (typeof input !== 'object' && typeof input !== 'function')
+  ) {
+    return false
+  }
+
+  return typeof (input as {then?: unknown}).then === 'function'
 }

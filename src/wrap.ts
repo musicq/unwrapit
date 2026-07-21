@@ -1,5 +1,5 @@
 import {err, ok} from './result'
-import {isPromise} from './utils'
+import {isPromiseLike} from './utils'
 import type {Result} from './result'
 import type {Infer, TP, TR} from './types'
 
@@ -10,8 +10,12 @@ import type {Infer, TP, TR} from './types'
  * **wrap an async function**
  *
  * ```ts
- * const fetchWrapper = wrap(fetch)
- * const ret = (await fetchWrapper('www.google.com')).unwrap()
+ * const fetchWrapper = wrap(async (url: string) => {
+ *   const response = await fetch(url)
+ *   if (!response.ok) throw new Error(`HTTP ${response.status}`)
+ *   return response
+ * })
+ * const ret = (await fetchWrapper('https://example.com')).unwrap()
  * const content = await ret.text()
  * ```
  *
@@ -23,20 +27,20 @@ import type {Infer, TP, TR} from './types'
  * ```
  */
 
-type ExcludePromise<T> = T extends Promise<any> ? never : T
+type ExcludePromiseLike<T> = T extends PromiseLike<any> ? never : T
 
 export interface WrapFn<E, Ok = Infer> {
   <A extends any[], R>(
-    fn: (...args: A) => Promise<R>
+    fn: (...args: A) => PromiseLike<R>
   ): (...args: A) => Promise<Result<Ok extends Infer ? Awaited<R> : Ok, E>>
 
-  <A extends any[], R extends ExcludePromise<any>>(
-    fn: (...args: A) => R
+  <A extends any[], R>(
+    fn: (...args: A) => ExcludePromiseLike<R>
   ): (...args: A) => Result<Ok extends Infer ? R : Ok, E>
 
-  <T>(promise: Promise<T>): Promise<Result<Ok extends Infer ? T : Ok, E>>
+  <T>(promise: PromiseLike<T>): Promise<Result<Ok extends Infer ? Awaited<T> : Ok, E>>
 
-  <T extends ExcludePromise<any>>(value: T): Result<Ok extends Infer ? T : Ok, E>
+  <T>(value: ExcludePromiseLike<T>): Result<Ok extends Infer ? T : Ok, E>
 }
 
 export function wrap<E = unknown, Ok = Infer>(): WrapFn<E, Ok>
@@ -48,10 +52,10 @@ export function wrap<A extends any[], R extends never>(
 ): (...args: A) => Result<R>
 
 export function wrap<A extends any[], R>(
-  fn: (...args: A) => Promise<R>
+  fn: (...args: A) => PromiseLike<R>
 ): (...args: A) => Promise<Result<Awaited<R>>>
 export function wrap<A extends any[], R>(
-  fn: (...args: A) => R
+  fn: (...args: A) => ExcludePromiseLike<R>
 ): (...args: A) => Result<R>
 
 // specify error type
@@ -61,10 +65,10 @@ export function wrap<E, F extends (...args: any[]) => never>(
 ): (...args: TP<F>) => Result<never, E>
 
 export function wrap<E, F extends (...args: any[]) => any>(
-  fn: (...args: TP<F>) => Promise<TR<F>>
+  fn: (...args: TP<F>) => PromiseLike<TR<F>>
 ): (...args: TP<F>) => Promise<Result<TR<F>, E>>
 export function wrap<E, F extends (...args: any[]) => any>(
-  fn: (...args: TP<F>) => TR<F>
+  fn: (...args: TP<F>) => ExcludePromiseLike<TR<F>>
 ): (...args: TP<F>) => Result<TR<F>, E>
 
 // specify error & return type
@@ -80,7 +84,9 @@ export function wrap<
   fn: (...args: TP<F>) => ReturnType<F>
 ): (
   ...args: TP<F>
-) => R extends Promise<infer AR> ? Promise<Result<AR, E>> : Result<R, E>
+) => R extends PromiseLike<infer AR>
+  ? Promise<Result<Awaited<AR>, E>>
+  : Result<R, E>
 
 /**
  * Wrap a promise value. This allows you handling async errors gracefully.
@@ -95,7 +101,7 @@ export function wrap<
  * const ret = (await wrap(promise)).unwrap()
  * ```
  */
-export function wrap<E, T>(promise: Promise<T>): Promise<Result<T, E>>
+export function wrap<E, T>(promise: PromiseLike<T>): Promise<Result<Awaited<T>, E>>
 
 /**
  * Wrap arbitrary value.
@@ -107,7 +113,7 @@ export function wrap<E, T>(promise: Promise<T>): Promise<Result<T, E>>
  * wrap({a: 1, b: true})
  * ```
  */
-export function wrap<T extends any>(value: T): Result<T, never>
+export function wrap<T>(value: ExcludePromiseLike<T>): Result<T, never>
 
 export function wrap(input?: any) {
   if (arguments.length === 0) {
@@ -120,7 +126,7 @@ export function wrap(input?: any) {
       try {
         const ret = input(...args)
 
-        if (isPromise(ret)) {
+        if (isPromiseLike(ret)) {
           return wrap(ret)
         }
 
@@ -132,8 +138,8 @@ export function wrap(input?: any) {
   }
 
   // wrap a promise value
-  if (isPromise(input)) {
-    return input.then(ok).catch(err)
+  if (isPromiseLike(input)) {
+    return Promise.resolve(input).then(ok, err)
   }
 
   // wrap a value

@@ -27,7 +27,7 @@ export type TP<T extends (...args: any) => any> = T extends (
 export type TR<T extends (...args: any) => any> = T extends (
   ...args: any
 ) => infer R
-  ? R extends Promise<infer P>
-    ? P
+  ? R extends PromiseLike<any>
+    ? Awaited<R>
     : R
   : any

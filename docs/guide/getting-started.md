@@ -30,11 +30,16 @@ Async functions return `Promise<Result<T, E>>`.
 ```ts
 import {wrap} from 'unwrapit'
 
-const get = wrap(fetch)
-const result = await get('https://example.com')
+const getJson = wrap(async (url: string) => {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  return response.json()
+})
+
+const result = await getJson('https://example.com/data')
 
 if (result.ok) {
-  console.log(result.value.status)
+  console.log(result.value)
 } else {
   console.error(result.error)
 }

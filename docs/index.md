@@ -1,8 +1,9 @@
 # unwrapit
 
-`unwrapit` provides a graceful way to handle errors in JavaScript and TypeScript.
-It wraps values, promises, and functions in a `Result` object so success and
-failure paths stay explicit.
+`unwrapit` turns throwing JavaScript and TypeScript functions and rejected
+promises into typed `Result` values with one small `wrap()` API. It is designed
+as a thin exception-boundary adapter, so you can migrate away from scattered
+`try`/`catch` blocks incrementally.
 
 ```shell
 npm i unwrapit
@@ -12,15 +13,20 @@ npm i unwrapit
 import {wrap} from 'unwrapit'
 
 async function main() {
-  const get = wrap(fetch)
-  const res = await get('https://example.com')
+  const getStatus = wrap(async (url: string) => {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    return response.status
+  })
+
+  const res = await getStatus('https://example.com')
 
   if (!res.ok) {
     console.error(res.error)
     return
   }
 
-  console.log(res.value.status)
+  console.log(res.value)
 }
 
 main()

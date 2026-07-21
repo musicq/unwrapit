@@ -1,4 +1,25 @@
 ---
+### Release Notes for Version 3.0.1
+
+#### Documentation and discovery
+
+- Reworked the README around `unwrapit`'s small exception-boundary use case.
+- Linked npm users to the current VitePress documentation site.
+- Improved package description, search keywords, homepage, and issue metadata.
+- Replaced the misleading bare `wrap(fetch)` example with explicit HTTP status
+  handling.
+
+#### Reliability
+
+- Added support for cross-realm promises and other `PromiseLike` values.
+- Deprecated partial `match` handlers and documented their `undefined` risk;
+  stricter types are reserved for the next major release.
+- Clean stale build chunks automatically before creating the npm package.
+- Run runtime and type tests automatically before publishing.
+- Added continuous integration for tests, type tests, and builds.
+
+---
+
 ### Release Notes for Version 3.0.0
 
 We are excited to announce the release of **v3.0.0** of **Unwrapit**, which brings significant updates, new features, and improvements for better usability and efficiency. Below are the key enhancements and additions:

@@ -13,11 +13,12 @@ Signature:
 
 ```ts
 match<U>(
-  handler:
-    | {Ok: (value: T) => U}
-    | {Err: (error: E) => U}
-    | {Ok: (value: T) => U; Err: (error: E) => U}
+  handler: {Ok: (value: T) => U; Err: (error: E) => U}
 ): U
+
+match<U>(
+  handler: {Ok: (value: T) => U} | {Err: (error: E) => U}
+): U // deprecated
 ```
 
 ## Handle both cases
@@ -40,7 +41,10 @@ const name = result.match({
 
 ## Use with narrowed results
 
-A single handler is useful when TypeScript already knows which variant you have.
+Single-branch handlers are supported for backward compatibility, but are
+deprecated. If the result represents the omitted branch, the runtime value is
+`undefined`. Prefer handling both branches, even when the result was narrowed,
+so the code remains total and will be ready for the next major version.
 
 ```ts
 if (result.ok) {
@@ -54,4 +58,4 @@ return result.match({
 })
 ```
 
-For general application code, the two-handler form is the most predictable.
+For general application code, always prefer the two-handler form.

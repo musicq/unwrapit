@@ -31,15 +31,20 @@ function wrap<A extends any[], R>(
 ## Wrap an async function
 
 ```ts
-const get = wrap(fetch)
-const result = await get('https://example.com')
+const getJson = wrap(async (url: string) => {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  return response.json()
+})
+
+const result = await getJson('https://example.com/data')
 ```
 
 Signature:
 
 ```ts
 function wrap<A extends any[], R>(
-  fn: (...args: A) => Promise<R>
+  fn: (...args: A) => PromiseLike<R>
 ): (...args: A) => Promise<Result<Awaited<R>>>
 ```
 
@@ -52,7 +57,7 @@ const result = await wrap(Promise.resolve(1))
 Signature:
 
 ```ts
-function wrap<E, T>(promise: Promise<T>): Promise<Result<T, E>>
+function wrap<E, T>(promise: PromiseLike<T>): Promise<Result<Awaited<T>, E>>
 ```
 
 ## Wrap a plain value
@@ -75,9 +80,11 @@ TypeScript does not track thrown error types. Because of that, `wrap(fn)` infers
 the success value but uses `unknown` for the error type.
 
 ```ts
-const get = wrap(fetch)
-const result = await get('https://example.com')
-//    ^? Result<Response, unknown>
+declare function loadText(url: string): Promise<string>
+
+const getText = wrap(loadText)
+const result = await getText('https://example.com')
+//    ^? Result<string, unknown>
 ```
 
 When you know the error type, use the curried form. This is the ergonomic
@@ -86,17 +93,17 @@ type first, then TypeScript still infers the wrapped function's parameters and
 success value from the second call.
 
 ```ts
-const get = wrap<TypeError>()(fetch)
-const result = await get('https://example.com')
-//    ^? Result<Response, TypeError>
+const getText = wrap<TypeError>()(loadText)
+const result = await getText('https://example.com')
+//    ^? Result<string, TypeError>
 ```
 
 `wrap()(fn)` is the same curried shape without custom types. It is mostly useful
 when you want to add generics later.
 
 ```ts
-const get = wrap()(fetch)
-// same inferred type as wrap(fetch)
+const getText = wrap()(loadText)
+// same inferred type as wrap(loadText)
 ```
 
 ## Specify error and value types

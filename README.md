@@ -2,19 +2,31 @@
 
 <p>
   <a href="https://npmjs.com/package/unwrapit"><img src="https://img.shields.io/npm/v/unwrapit.svg" alt="npm package"></a>
+  <a href="https://github.com/musicq/unwrapit/actions/workflows/ci.yml"><img src="https://github.com/musicq/unwrapit/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://bundlephobia.com/package/unwrapit"><img src="https://img.shields.io/bundlephobia/minzip/unwrapit" alt="minified and gzipped size"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/npm/l/unwrapit" alt="MIT license"></a>
 </p>
 
-`unwrapit` provides a way to handle errors in JS/TS gracefully and intuitively. Inspired by Rust's `Result` type, it lets you wrap functions, promises, and values so that errors are captured as values instead of thrown exceptions.
+**Turn throwing functions and rejected promises into typed `Result` values with
+one `wrap()` API.**
+
+`unwrapit` is a small exception-boundary adapter for JavaScript and TypeScript.
+It catches sync throws and async rejections, then returns a discriminated
+`Result<T, E>` instead of letting the error escape.
+
+- One `wrap()` API for sync functions, async functions, promises, and values.
+- Familiar `result.ok`, `result.value`, and `result.error` narrowing.
+- Less than 1 kB minified and gzipped.
+- Optional RxJS operator available from `unwrapit/rxjs`.
 
 ## Documentation
 
-The docs source lives in [`docs`](./docs) and can be previewed locally:
+Read the [documentation](https://unwrapit-js.vercel.app/), or preview its
+source locally:
 
 ```shell
 pnpm run docs:dev
 ```
-
-The legacy GitBook site is still available at https://musicq.gitbook.io/unwrapit/.
 
 ## Getting started
 
@@ -45,12 +57,35 @@ if (result.ok) {
 ```ts
 import { wrap } from 'unwrapit'
 
-const safeFetch = wrap(fetch)
-const result = await safeFetch('https://api.example.com/data')
+const getJson = wrap(async (url: string) => {
+  const response = await fetch(url)
 
-const response = result.unwrap()
-const data = await response.json()
+  // fetch does not reject for HTTP error statuses, so make that failure explicit.
+  if (!response.ok) {
+    throw new Error(`Request failed with HTTP ${response.status}`)
+  }
+
+  return response.json()
+})
+
+const result = await getJson('https://api.example.com/data')
+
+if (result.ok) {
+  console.log(result.value)
+} else {
+  console.error(result.error)
+}
 ```
+
+## Is unwrapit a good fit?
+
+Use `unwrapit` when you want to add an explicit error boundary around existing
+throwing APIs without adopting a larger functional-programming toolkit. Its
+main job is making migration from `try`/`catch` small and incremental.
+
+If your application needs a comprehensive Result ecosystem with extensive
+composition operators, a larger library such as
+[`neverthrow`](https://github.com/supermacro/neverthrow) may be a better fit.
 
 ## API
 
@@ -67,11 +102,16 @@ import { wrap } from 'unwrapit'
 
 // Sync function
 const safeParse = wrap(JSON.parse)
-const result = safeParse('invalid json') // Result<any, unknown>
+const parseResult = safeParse('invalid json') // Result<any, unknown>
 
 // Async function
-const safeFetch = wrap(fetch)
-const result = await safeFetch('https://example.com') // Result<Response, unknown>
+const safeFetch = wrap(async (url: string) => {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  return response
+})
+
+const fetchResult = await safeFetch('https://example.com') // Result<Response, unknown>
 ```
 
 #### Wrap a promise
@@ -182,12 +222,15 @@ const result = ok(1).match({
 }) // 2
 ```
 
-You can also provide only one branch:
+Single-branch handlers remain available for backward compatibility, but are
+deprecated because an omitted branch can produce `undefined` at runtime:
 
 ```ts
 ok(1).match({ Ok: v => v * 2 })   // 2
 err('x').match({ Err: e => e.length }) // 1
 ```
+
+Prefer passing both `Ok` and `Err` handlers.
 
 ### `defineUnwrapitConfig(config)`
 

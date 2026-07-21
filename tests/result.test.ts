@@ -117,10 +117,12 @@ describe('result', () => {
       const success = ok(1)
       expect(success.match({Ok: v => v + 1})).toBe(2)
       expect(success.match({Ok: v => v + 1, Err: e => 1})).toBe(2)
+      expect(success.match({Err: e => 1})).toBeUndefined()
 
       const error = err<string, number>('error')
       expect(error.match({Err: e => e.length})).toBe(5)
       expect(error.match({Ok: v => v, Err: e => 1})).toBe(1)
+      expect(error.match({Ok: v => v})).toBeUndefined()
     })
   })
 })

@@ -113,6 +113,34 @@ describe('wrap function', () => {
     expect((handler.error as Error).message).toMatch(/Toggle is off\./)
   })
 
+  test('wrap PromiseLike values and functions', async () => {
+    const fulfilled = {
+      then(resolve: (value: string) => unknown) {
+        resolve('thenable value')
+      },
+    } as PromiseLike<string>
+
+    const rejected = {
+      then(
+        _resolve: (value: string) => unknown,
+        reject?: (reason: unknown) => unknown
+      ) {
+        reject?.(new Error('thenable error'))
+      },
+    } as PromiseLike<string>
+
+    expect((await wrap(fulfilled)).unwrap()).toBe('thenable value')
+
+    const rejectedResult = await wrap(rejected)
+    expect(rejectedResult.ok).toBe(false)
+    if (!rejectedResult.ok) {
+      expect((rejectedResult.error as Error).message).toBe('thenable error')
+    }
+
+    const wrappedThenable = wrap(() => fulfilled)
+    expect((await wrappedThenable()).unwrap()).toBe('thenable value')
+  })
+
   test('wrap arbitrary value', () => {
     const r1 = wrap(1)
     const r2 = wrap('string')

@@ -135,7 +135,11 @@ export interface R<T, E = unknown> {
    * res // 2
    * ```
    */
-  match: <U>(handler: A<T, U> | B<E, U> | C<T, E, U>) => U
+  match<U>(handler: C<T, E, U>): U
+  /** @deprecated Prefer handling both branches. Partial handlers may return undefined. */
+  match<U>(handler: A<T, U>): U
+  /** @deprecated Prefer handling both branches. Partial handlers may return undefined. */
+  match<U>(handler: B<E, U>): U
 }
 
 export class Ok<T, E = never> implements R<T, E> {
@@ -163,6 +167,11 @@ export class Ok<T, E = never> implements R<T, E> {
     return this
   }
 
+  match<U>(handler: C<T, E, U>): U
+  /** @deprecated Prefer handling both branches. Partial handlers may return undefined. */
+  match<U>(handler: A<T, U>): U
+  /** @deprecated Prefer handling both branches. Partial handlers may return undefined. */
+  match<U>(handler: B<E, U>): U
   match<U>(handler: A<T, U> | B<E, U> | C<T, E, U>): U {
     if ('Ok' in handler) {
       return handler.Ok(this.value)
@@ -205,6 +214,11 @@ export class Err<E = unknown, T = unknown> implements R<T, E> {
     return new Err(errMapFn(this.error))
   }
 
+  match<U>(handler: C<T, E, U>): U
+  /** @deprecated Prefer handling both branches. Partial handlers may return undefined. */
+  match<U>(handler: A<T, U>): U
+  /** @deprecated Prefer handling both branches. Partial handlers may return undefined. */
+  match<U>(handler: B<E, U>): U
   match<U>(handler: A<T, U> | B<E, U> | C<T, E, U>): U {
     if ('Err' in handler) {
       return handler.Err(this.error)
