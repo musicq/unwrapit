@@ -31,3 +31,7 @@ export type TR<T extends (...args: any) => any> = T extends (
     ? P
     : R
   : any
+
+export type Optional<T> = T | undefined
+export type Nullable<T> = T | null
+export type Maybe<T> = T | undefined | null
